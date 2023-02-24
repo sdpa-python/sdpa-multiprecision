@@ -29,7 +29,14 @@ namespace sdpa {
 class BlockStruct
 {
 public:
-  enum BlockType {btSDP,btSOCP,btLP};
+  /*
+  This change is temporary.
+
+  TODO: Once the entire codebase has been adapted to use
+  `sdpa_block.{h,cpp}`, =1, =2, =3 should be removed
+  from this enum.
+  */
+  enum BlockType {btSDP=1,btSOCP=2,btLP=3};
   int  nBlock;
   int* blockStruct;
   int* blockNumber;

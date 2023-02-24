@@ -40,18 +40,22 @@ void SDPA::initializeSolve()
 			    FILE_CHANGE_END1);
   com.TotalTime += TimeCal(FILE_CHANGE_START1,
 			    FILE_CHANGE_END1);
-  inputData.initialize_index();
-  newton.initialize(m,bs);
+  inputData.initialize_index(bs.SDP_nBlock, bs.SOCP_nBlock, bs.LP_nBlock, com);
+  newton.initialize(m, bs.SDP_nBlock, bs.SDP_blockStruct,
+          bs.SOCP_nBlock, bs.SOCP_blockStruct,
+          bs.LP_nBlock);
   int nBlock2 = bs.SDP_nBlock + bs.SOCP_nBlock + bs.LP_nBlock;
-  chordal.initialize(&newton.sparse_bMat);
-  chordal.ordering_bMat(m, nBlock2, inputData, Display, fpout);
-  newton.initialize_bMat(m, chordal, inputData, Display, fpout);
+  chordal.ordering_bMat(m, nBlock2, inputData, fpout);
+  newton.initialize_bMat(m, chordal,inputData, fpout);
   newton.computeFormula_SDP(inputData,0.0,KAPPA);
 
-  work.initialize(m,bs);
+  work.initialize(m, bs.SDP_nBlock, bs.SDP_blockStruct,
+		  bs.SOCP_nBlock, bs.SOCP_blockStruct, bs.LP_nBlock);
   if (isInitPoint == false) {
     mu.initialize(param.lambdaStar);
-    initRes.initialize(m, bs, inputData, currentPt);
+    initRes.initialize(m, bs.SDP_nBlock, bs.SDP_blockStruct,
+	     bs.SOCP_nBlock, bs.SOCP_blockStruct,
+	     bs.LP_nBlock, inputData, currentPt);
     currentRes.copyFrom(initRes);
     beta.initialize(param.betaStar);
     theta.initialize(param, initRes);
@@ -66,7 +70,9 @@ void SDPA::resetParameters()
 {
   if (isInitPoint == false) {
     mu.initialize(param.lambdaStar);
-    initRes.initialize(m, bs, inputData, currentPt);
+    initRes.initialize(m, bs.SDP_nBlock, bs.SDP_blockStruct,
+	     bs.SOCP_nBlock, bs.SOCP_blockStruct,
+	     bs.LP_nBlock, inputData, currentPt);
     currentRes.copyFrom(initRes);
     beta.initialize(param.betaStar);
     theta.initialize(param, initRes);
@@ -83,7 +89,9 @@ void SDPA::solve()
     currentPt.computeInverse(work,com);
     initPt_xMat.copyFrom(currentPt.xMat);
     initPt_zMat.copyFrom(currentPt.zMat);
-    initRes.initialize(m, bs, inputData, currentPt);
+    initRes.initialize(m, bs.SDP_nBlock, bs.SDP_blockStruct,
+	     bs.SOCP_nBlock, bs.SOCP_blockStruct,
+	     bs.LP_nBlock, inputData, currentPt);
     currentRes.copyFrom(initRes);
     theta.initialize(param, initRes);
     solveInfo.initialize(inputData, currentPt, mu.initial,
@@ -114,11 +122,10 @@ void SDPA::solve()
 
     bool isSuccessCholesky;
     isSuccessCholesky = newton.Mehrotra(Newton::PREDICTOR,
-					m, inputData, chordal,
-					currentPt, currentRes,
+					inputData, currentPt,
+					currentRes,
 					mu, beta, reduction,
-					phase, work, com,
-					Display, fpout);
+					phase,work,com);
     if (isSuccessCholesky == false) {
       break;
     }
@@ -150,20 +157,15 @@ void SDPA::solve()
 #if 1 // 2007/08/29 kazuhide nakata
     // add stopping criteria: objValPrimal < ObjValDual
     //	if ((pIteration > 10) &&
-    if (phase.value == SolveInfo::pdFEAS
-	&& ( beta.value> 5.0
-	     || solveInfo.objValPrimal < solveInfo.objValDual + (1.0e-6))
-	&& (fabs(solveInfo.objValPrimal) > 1.0e-4
-	    && fabs(solveInfo.objValDual) > 1.0e-4) ) {
-      rMessage("Strange behavior : primal < dual");
-      break;
-    }
+	if ((phase.value == SolveInfo::pdFEAS) &&
+		((beta.value > 5)||(solveInfo.objValPrimal < solveInfo.objValDual))){
+	  break;
+	}
 #endif
 
-    newton.Mehrotra(Newton::CORRECTOR, m, 
-		    inputData, chordal, currentPt, currentRes,
-		    mu, beta, reduction, phase,work,com,
-		    Display, fpout);
+    newton.Mehrotra(Newton::CORRECTOR,
+		    inputData, currentPt, currentRes,
+		    mu, beta, reduction, phase,work,com);
 
     // rMessage("currentPt = "); currentPt.display();
     // rMessage("newton corrector = "); newton.display();
@@ -200,7 +202,7 @@ void SDPA::solve()
     theta.update(reduction,alpha);
     mu.update(currentPt);
     currentRes.update(m,inputData, currentPt, com);
-    theta.update_exact(initRes,currentRes, param);
+    theta.update_exact(initRes,currentRes);
 
     if (isInitPoint) {
       solveInfo.update(inputData, initPt_xMat, initPt_zMat, currentPt,
@@ -226,14 +228,19 @@ void SDPA::solve()
   com.TotalTime += com.MainLoop;
   currentRes.compute(m,inputData,currentPt);
 #if REVERSE_PRIMAL_DUAL
-  Lal::let(currentPt.yVec,'=',currentPt.yVec,'*',&DMONE);
+  Lal::let(currentPt.yVec,'=',currentPt.yVec,'*',&MMONE);
   phase.reverse();
 #endif
+#if 1
   IO::printLastInfo(pIteration, mu, theta, solveInfo, alpha, beta,
-		    currentRes, phase, currentPt, 
-		    inputData, work, com.TotalTime, com,
-		    param, fpout, Display);
-  IO::printSolution(bs, currentPt, param, fpout);
+		    currentRes, phase, currentPt, com.TotalTime,
+			nBlock, bs.blockStruct, bs.blockType, bs.blockNumber,
+		    inputData, work, com, param, fpout, Display);
+#else
+  IO::printLastInfo(pIteration, mu, theta, solveInfo, alpha, beta,
+		    currentRes, phase, currentPt, com.TotalTime,
+		    inputData, work, com, param, fpout, Display);
+#endif
   // com.display(fpout);
 
   if (Display) {

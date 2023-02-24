@@ -19,9 +19,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 ------------------------------------------------------------- */
 
-#include <cstdio>
-#include <cstdlib>
+#ifndef _MAIN_
+#define _MAIN_
+#endif
+
+#include <sdpa_io.h>
 #include <sdpa_call.h>
+
+#if UseMETIS
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "metis.h"
+#ifdef __cplusplus
+}
+#endif
+#endif
+
 using namespace sdpa;
 
 #define USER_PARAMETER_FILE ((char *)"./param.sdpa")
@@ -40,11 +54,9 @@ static void message(char* argv0)
   cout << endl;
   cout << "---- option type 1 ------------" << endl;
   cout << argv0 <<" DataFile OutputFile [InitialPtFile]"
-    " [-pt parameters] [-dimacs] [-numThreads numThreads]"<< endl;
+    " [-pt parameters]"<< endl;
   cout << "parameters = 0 default, 1 fast (unstable),"
     " 2 slow (stable)" << endl;
-  cout << "  -dimacs : printout dimacs information incurring additional computation cost " << endl;
-  cout << "  -numThreads: Number of pthreads for internal computation" << endl;
   cout << "example1-1: " << argv0
        << " example1.dat example1.result" << endl;
   cout << "example1-2: " << argv0
@@ -53,10 +65,6 @@ static void message(char* argv0)
        << " example1.dat example1.result example1.ini" << endl;
   cout << "example1-4: " << argv0
        << " example1.dat example1.result -pt 2" << endl;
-  cout << "example1-5: " << argv0
-       << " example1.dat example1.result -dimacs" << endl;
-  cout << "example1-6: " << argv0
-       << " example1.dat example1.result -numThreads 4" << endl;
 
   cout << endl;
   cout << "---- option type 2 ------------" << endl;
@@ -66,45 +74,24 @@ static void message(char* argv0)
   cout << "  -o  : output     :: -p  : parameter       " << endl;
   cout << "  -pt : parameters , 0 default, 1 fast (unstable)" << endl;
   cout << "                     2 slow (stable)         " << endl;
-  cout << "  -dimacs : printout dimacs information incurring additional computation cost " << endl;
-  cout << "  -numThreads: Number of pthreads for internal computation" << endl;
+  // cout << "  -k  : Kappa(RealValue)" << endl;
   cout << "example2-1: " << argv0
        << " -o example1.result -dd example1.dat" << endl;
   cout << "example2-2: " << argv0
-       << " -ds example1.dat-s -o example1.result "
+       << " -ds example1.dat-s -o example2.result "
        << "-p param.sdpa" << endl;
   cout << "example2-3: " << argv0
-       << " -ds example1.dat-s -o example1.result "
+       << " -ds example1.dat-s -o example3.result "
        << "-pt 2" << endl;
-  cout << "example2-4: " << argv0
-       << " -ds example1.dat-s -o example1.result "
-       << "-dimacs" << endl;
-  cout << "example2-5: " << argv0
-       << " -ds example1.dat-s -o example1.result "
-       << "-numThreads 4" << endl;
-
-  cout << endl;
-  cout << "---- option type 3 ------------" << endl;
-  cout << argv0 << " --version " << endl;
-  cout << "   to print out version and exit." << endl;
-
-  cout << endl << endl;
-  cout << "PARAMETER_FILE is decided by the following priority" << endl;
-  cout << "   1: The file assigned by '-p' option of 'option type 2'." << endl;
-  cout << "       For 'option type1', this is skipped." << endl;
-  cout << "   2: " << USER_PARAMETER_FILE  << endl;
-  cout << "       For 'option type2', this is skipped." << endl;
-  cout << "   3: " << DEFAULT_PARAMETER_FILE << endl;
-  cout << "   4: Default parameter" << endl;
   exit(1);
 }
 
 static void argumentAnalysis(SDPA& Problem1,
 			     int argc, char** argv,
-			     char*& inputFileName,
-			     char*& resultFileName,
-			     char*& initFileName,
-			     char*& paramFileName,
+			     char*& inputFileName, // comes from `-dd`, it's the `dataFile` in GMP
+			     char*& resultFileName, // comes from `-o`, it's the `outFile` in GMP
+			     char*& initFileName, // comes from `-id` or `-is`, it's the `initFile` in GMP
+			     char*& paramFileName, // comes from `-p`, it's the `paraFile` in GMP
 			     SDPA::SparseType& isInputSparse,
 			     SDPA::SparseType& isInitSparse,
 			     SDPA::ParameterType& parameterType,
@@ -115,8 +102,8 @@ static void argumentAnalysis(SDPA& Problem1,
   }
   if (strcmp(argv[1],"--version") == 0) {
     fprintf(stdout,"====\n");
-    fprintf(stdout,"SDPA (SemiDefinite Programming Algorithm) %s\n",sdpa_version);
-    fprintf(stdout,"     %s\n",sdpa_right);
+    // fprintf(stdout,"SDPA (SemiDefinite Programming Algorithm) %s\n",sdpa_version);
+    // fprintf(stdout,"     %s\n",sdpa_right);
     fprintf(stdout,"====\n");
     exit(0);
   }
@@ -187,11 +174,6 @@ static void argumentAnalysis(SDPA& Problem1,
 	paramFileName = NULL;
 	continue;
       }
-      if (strcmp(target,"-numThreads")==0 && index+1 < argc) {
-	numThreads = atoi(argv[index+1]);
-	index++;
-	continue;
-      }
     }
   }
   else { // SDPA argument
@@ -207,14 +189,7 @@ static void argumentAnalysis(SDPA& Problem1,
     paramFileName = USER_PARAMETER_FILE;
 
     for (int index=3; index<argc; ++index) {
-      if (strcmp(argv[index],"-dimacs")==0) {
-	isDimacs = true;
-      }
-      else if (strcmp(argv[index],"-numThreads")==0 && index+1 < argc) {
-	numThreads = atoi(argv[index+1]);
-	++index;
-      }
-      else if (strcmp(argv[index],"-pt")==0 && index+1 < argc) {
+      if (strcmp(argv[index],"-pt")==0 && index+1 < argc) {
 	int tmp = atoi(argv[index+1]);
 	switch (tmp) {
 	case 0:
@@ -277,7 +252,7 @@ int main(int argc, char** argv)
   char string_time[1024];
   strcpy(string_time,ctime(&ltime));
   string_time[strlen(string_time)-1]='\0';
-  fprintf(stdout,"SDPA (Version %s) start at [%s]\n", sdpa_version, string_time);
+  // fprintf(stdout,"SDPA (Version %s) start at [%s]\n", sdpa_version, string_time);
   // cout << "let me see your ..." << endl;
   if (argc == 1) {
     message(argv[0]);
@@ -349,25 +324,10 @@ int main(int argc, char** argv)
   }
   fprintf(stdout  ,"out   is %s\n", resultFileName);
   fprintf(fpresult,"out    is %s\n", resultFileName);
-  if (isDimacs) {
-    fprintf(stdout  ,"Dimacs information will be computed after the iteration.\n");
-    fprintf(fpresult,"Dimacs information will be computed after the iteration.\n");
-  }
 
-  Problem1.setNumThreads(numThreads);
+  // Problem1.setNumThreads(numThreads); // not needed as we don't have multiple threads in GMP
   Problem1.initializeSolve();
   Problem1.solve();
-
-  if (isDimacs) {
-    double dimacs_error[7];
-    Problem1.getDimacsError(dimacs_error);
-    Problem1.printDimacsError(dimacs_error,
-			      Problem1.getParameterPrintInformation(),
-			      stdout);
-    Problem1.printDimacsError(dimacs_error,
-			      Problem1.getParameterPrintInformation(),
-			      fpresult);
-  }
   
   Problem1.terminate();
   

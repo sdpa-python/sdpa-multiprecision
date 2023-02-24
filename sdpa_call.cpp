@@ -58,7 +58,7 @@ bool IndexLIJv::compare(IndexLIJv* a, IndexLIJv* b)
 
 SDPA::SDPA()
 {
-  KAPPA      = 1.5;
+  KAPPA      = 1.2;
   m          = 0;
   nBlock     = 0;
   fpout      = NULL;
@@ -135,25 +135,28 @@ void SDPA::setParameterEpsilonDash (double epsilonDash)
   param.epsilonDash = epsilonDash;
 }
 
-void SDPA::setParameterPrintXVec(char* xPrint)
-{
-  strncpy(param.xPrint,xPrint,PRINT_DEFAULT_LENGTH);
-}
-
-void SDPA::setParameterPrintXMat(char* XPrint)
-{
-  strncpy(param.XPrint,XPrint,PRINT_DEFAULT_LENGTH);
-}
-
-void SDPA::setParameterPrintYMat(char* YPrint)
-{
-  strncpy(param.YPrint,YPrint,PRINT_DEFAULT_LENGTH);
-}
-
-void SDPA::setParameterPrintInformation(char* infPrint)
-{
-  strncpy(param.infPrint,infPrint,PRINT_DEFAULT_LENGTH);
-}
+/*
+TODO: Remove or re-enable these functions.
+*/
+// void SDPA::setParameterPrintXVec(char* xPrint)
+// {
+//   strncpy(param.xPrint,xPrint,PRINT_DEFAULT_LENGTH);
+// }
+//
+// void SDPA::setParameterPrintXMat(char* XPrint)
+// {
+//   strncpy(param.XPrint,XPrint,PRINT_DEFAULT_LENGTH);
+// }
+//
+// void SDPA::setParameterPrintYMat(char* YPrint)
+// {
+//   strncpy(param.YPrint,YPrint,PRINT_DEFAULT_LENGTH);
+// }
+//
+// void SDPA::setParameterPrintInformation(char* infPrint)
+// {
+//   strncpy(param.infPrint,infPrint,PRINT_DEFAULT_LENGTH);
+// }
 
 void SDPA::setDisplay(FILE* Display)
 {
@@ -168,20 +171,23 @@ void SDPA::setResultFile(FILE* fpout)
 void SDPA::setInitPoint(bool isInitPoint)
 {
   if (this->isInitPoint == false && isInitPoint == true) {
-    initPt_xMat.initialize(bs);
-    initPt_zMat.initialize(bs);
+    initPt_xMat.initialize(bs.SDP_nBlock, bs.SDP_blockStruct, bs.SOCP_nBlock, bs.SOCP_blockStruct, bs.LP_nBlock);
+    initPt_zMat.initialize(bs.SDP_nBlock, bs.SDP_blockStruct, bs.SOCP_nBlock, bs.SOCP_blockStruct, bs.LP_nBlock);
   }
   this->isInitPoint = isInitPoint;
   if (isInitPoint == false) {
     mu.initialize(param.lambdaStar);
-    currentPt.initialize(m, bs, param.lambdaStar, com);
+    currentPt.initialize(m, bs.SDP_nBlock, bs.SDP_blockStruct, bs.SOCP_nBlock, bs.SOCP_blockStruct, bs.LP_nBlock, param.lambdaStar, com);
   }
 }
 
-void SDPA::setNumThreads(int NumThreads)
-{
-  newton.setNumThreads(Display,fpout,NumThreads);
-}
+/*
+TODO: Remove or re-enable this function.
+*/
+// void SDPA::setNumThreads(int NumThreads)
+// {
+//   newton.setNumThreads(Display,fpout,NumThreads);
+// }
 
 SDPA::ParameterType SDPA::getParameterType()
 {
@@ -228,22 +234,25 @@ double SDPA::getParameterEpsilonDash()
 {
   return param.epsilonDash;
 }
-char* SDPA::getParameterPrintXVec()
-{
-  return param.xPrint;
-}
-char* SDPA::getParameterPrintXMat()
-{
-  return param.XPrint;
-}
-char* SDPA::getParameterPrintYMat()
-{
-  return param.YPrint;
-}
-char* SDPA::getParameterPrintInformation()
-{
-  return param.infPrint;
-}
+/*
+TODO: Remove or re-enable these functions.
+*/
+// char* SDPA::getParameterPrintXVec()
+// {
+//   return param.xPrint;
+// }
+// char* SDPA::getParameterPrintXMat()
+// {
+//   return param.XPrint;
+// }
+// char* SDPA::getParameterPrintYMat()
+// {
+//   return param.YPrint;
+// }
+// char* SDPA::getParameterPrintInformation()
+// {
+//   return param.infPrint;
+// }
 FILE* SDPA::getDisplay()
 {
   return Display;
@@ -257,10 +266,13 @@ bool SDPA::getInitPoint()
   return isInitPoint;
 }
 
-int SDPA::getNumThreads()
-{
-  return newton.NUM_THREADS;
-}
+/*
+TODO: Remove or re-enable this function.
+*/
+// int SDPA::getNumThreads()
+// {
+//   return newton.NUM_THREADS;
+// }
 
 void SDPA::inputConstraintNumber(int m)
 {
@@ -458,7 +470,9 @@ void SDPA::initializeUpperTriangleSpace()
 {
   bs.makeInternalStructure();
   NewArray(NonZeroElements,vector<IndexLIJv*>,m+1);
-  currentPt.initialize(m, bs, param.lambdaStar, com);
+  currentPt.initialize(m, bs.SDP_nBlock, bs.SDP_blockStruct,
+	     bs.SOCP_nBlock, bs.SOCP_blockStruct,
+	     bs.LP_nBlock, param.lambdaStar, com);
   inputData.initialize(bs);
   inputData.initialize_bVec(m);
 }
@@ -475,7 +489,7 @@ void SDPA::printNonZeroElements(FILE* fp)
       int j        = a[0].j;
       double value = a[0].value;
       fprintf(fp,"%d, %d, %d, %d, ",k,l,i,j);
-      fprintf(fp,param.infPrint,value);
+      // fprintf(fp,param.infPrint,value);
       fprintf(fp,"\n");
     }
   }
@@ -685,12 +699,12 @@ void SDPA::initializeUpperTriangle(bool checkTwiceInput)
   DeleteArray(NonZeroElements);
 }
   
-double* SDPA::getResultXVec()
+mpf_class* SDPA::getResultXVec()
 {
   return currentPt.yVec.ele;
 }
 
-double* SDPA::getResultXMat(int l)
+mpf_class* SDPA::getResultXMat(int l)
 {
   if (l > nBlock || l <= 0) {
       rError ("l exceeds nBlock or "
@@ -713,7 +727,7 @@ double* SDPA::getResultXMat(int l)
   return NULL;
 }
 
-double* SDPA::getResultYMat(int l)
+mpf_class* SDPA::getResultYMat(int l)
 {
   if (l > nBlock || l <= 0) {
       rError ("l exceeds nBlock or "
@@ -736,52 +750,55 @@ double* SDPA::getResultYMat(int l)
   return NULL;
 }
 
-double SDPA::getPrimalObj()
+mpf_class SDPA::getPrimalObj()
 {
   // Note reverse primal-dual
   return -solveInfo.objValDual;
 }
 
-double SDPA::getDualObj()
+mpf_class SDPA::getDualObj()
 {
   // Note reverse primal-dual
   return -solveInfo.objValPrimal;
 }
 
-double SDPA::getPrimalError()
+mpf_class SDPA::getPrimalError()
 {
   // Note reverse primal-dual
   return currentRes.normDualMat;
 }
 
-double SDPA::getDualError()
+mpf_class SDPA::getDualError()
 {
   // Note reverse primal-dual
   return currentRes.normPrimalVec;
 }
 
-double SDPA::getDigits()
-{
-  double mean =  (fabs(solveInfo.objValPrimal)
-		  + fabs(solveInfo.objValDual)) / 2.0;
-  double PDgap = getDualityGap();
-  double digits = -log10(fabs(PDgap/mean));
-  return digits;
-}
+/*
+TODO: Remove or re-enable this function.
+*/
+// double SDPA::getDigits()
+// {
+//   double mean =  (fabs(solveInfo.objValPrimal)
+// 		  + fabs(solveInfo.objValDual)) / 2.0;
+//   double PDgap = getDualityGap();
+//   double digits = -log10(fabs(PDgap/mean));
+//   return digits;
+// }
 
 int SDPA::getIteration()
 {
   return pIteration;
 }
 
-double SDPA::getMu()
+mpf_class SDPA::getMu()
 {
   return mu.current;
 }
 
-double SDPA::getDualityGap()
+mpf_class SDPA::getDualityGap()
 {
-  double PDgap = fabs(solveInfo.objValPrimal
+  mpf_class PDgap = abs(solveInfo.objValPrimal
 		      - solveInfo.objValDual);
   return PDgap;
 }
@@ -866,36 +883,39 @@ SDPA::ConeType SDPA::getBlockType(int l)
   return SDPA::SDP; // dummy return
 }
 
-void SDPA::getDimacsError(double* DimacsError)
-{
-  IO::computeDimacs(DimacsError, solveInfo, currentRes,
-		    currentPt, inputData, work);
-}
-
-void SDPA::printDimacsError(double* DimacsError, char* printFormat,
-			    FILE* fpout)
-{
-  IO::printDimacs(DimacsError,printFormat,fpout);
-}
-
-  
-void SDPA::printResultXVec(FILE* fp)
-{
-  // Note reverse primal-dual
-  currentPt.yVec.display(fp,1.0,param.xPrint);
-}
-
-void SDPA::printResultXMat(FILE* fp)
-{
-  // Note reverse primal-dual
-  currentPt.zMat.displaySolution(bs,fp,param.XPrint);
-}
-
-void SDPA::printResultYMat(FILE* fp)
-{
-  // Note reverse primal-dual
-  currentPt.xMat.displaySolution(bs,fp,param.YPrint);
-}
+/*
+TODO: Remove or re-enable these functions.
+*/
+// void SDPA::getDimacsError(double* DimacsError)
+// {
+//   IO::computeDimacs(DimacsError, solveInfo, currentRes,
+// 		    currentPt, inputData, work);
+// }
+//
+// void SDPA::printDimacsError(double* DimacsError, char* printFormat,
+// 			    FILE* fpout)
+// {
+//   IO::printDimacs(DimacsError,printFormat,fpout);
+// }
+//
+//  
+// void SDPA::printResultXVec(FILE* fp)
+// {
+//   // Note reverse primal-dual
+//   currentPt.yVec.display(fp,1.0,param.xPrint);
+// }
+//
+// void SDPA::printResultXMat(FILE* fp)
+// {
+//   // Note reverse primal-dual
+//   currentPt.zMat.displaySolution(bs,fp,param.XPrint);
+// }
+//
+// void SDPA::printResultYMat(FILE* fp)
+// {
+//   // Note reverse primal-dual
+//   currentPt.xMat.displaySolution(bs,fp,param.YPrint);
+// }
 
 void SDPA::printComputationTime(FILE* fp)
 {
@@ -907,12 +927,15 @@ void SDPA::printParameters(FILE* fp)
   param.display(fp);
 }
 
-void SDPA::printSDPAVersion(FILE* fp)
-{
-  if (fp) {
-    fprintf(fp,"%s\n",(char*)sdpa_right);
-  }
-}
+/*
+TODO: Remove or re-enable this function.
+*/
+// void SDPA::printSDPAVersion(FILE* fp)
+// {
+//   if (fp) {
+//     fprintf(fp,"%s\n",(char*)sdpa_right);
+//   }
+// }
 
 void SDPA::readInput(char* filename, FILE* fpout, SparseType type)
 {
@@ -948,13 +971,13 @@ void SDPA::readInput(char* filename, FILE* fpout, SparseType type)
   IO::read(fpinput,fpout,m,titleAndComment);
   IO::read(fpinput,nBlock);
   bs.initialize(nBlock);
-  IO::read(fpinput,bs);
+  IO::read(fpinput, bs);
   bs.makeInternalStructure();
   inputData.initialize(bs);
-  IO::read(fpinput,m,bs,inputData,isDataSparse);
+  IO::read(fpinput,m, bs.SDP_nBlock,bs.SDP_blockStruct, bs.SOCP_nBlock,bs.SOCP_blockStruct, bs.LP_nBlock, bs.nBlock,bs.blockStruct,bs.blockType,bs.blockNumber,inputData,isDataSparse);
   // inputData.initialize_index();
   fclose(fpinput);
-  currentPt.initialize(m, bs, param.lambdaStar,com);
+  currentPt.initialize(m, bs.SDP_nBlock, bs.SDP_blockStruct, bs.SOCP_nBlock, bs.SOCP_blockStruct, bs.LP_nBlock, param.lambdaStar, com);
   TimeEnd(FILE_READ_END1);
   com.FileRead += TimeCal(FILE_READ_START1,
 			  FILE_READ_END1);
@@ -993,7 +1016,7 @@ void SDPA::readInit(char* filename,  FILE* fpout, SparseType type)
     }
   }
   IO::read(fpinit,currentPt.xMat,currentPt.yVec,currentPt.zMat,
-	   bs, isInitSparse);
+	   isInitSparse);
 #if 0
   rMessage("intial X = ");
   currentPt.xMat.display();
@@ -1024,222 +1047,222 @@ void SDPA::readParameter(char* filename, FILE* fpout)
   return;
 }
 
-void SDPA::writeSparseLinearSpace(FILE* fp, char* printFormat,
-				  sdpa::SparseLinearSpace& A, int k)
-{
-  // bs.display();
-  int  SDP_sp_nBlock  = A.SDP_sp_nBlock;
-  // int  SOCP_sp_nBlock = A.SOCP_sp_nBlock;
-  int  LP_sp_nBlock   = A.LP_sp_nBlock;
-  int* SDP_sp_index   = A.SDP_sp_index;
-  // int* SOCP_sp_index  = A.SOCP_sp_index;
-  int* LP_sp_index    = A.LP_sp_index;
-
-  for (int l=0; l<SDP_sp_nBlock; ++l) {
-    int l2 = SDP_sp_index[l];
-    int original_l = 0;
-    for (int l3=0,countSDP=0; l3<bs.nBlock; ++l3) {
-      if (bs.blockType[l3] == BlockStruct::btSDP) {
-	if (countSDP == l2) {
-	  original_l = l3;
-	  break;
-	}
-	countSDP++;
-      }
-    }
-    // rMessage("l2 = " << l2);
-    SparseMatrix& Al = A.SDP_sp_block[l];
-    if (Al.type == SparseMatrix::SPARSE) {
-      // rMessage("sparse: Al.NonZeroCount = " << Al.NonZeroCount);
-      for (int index=0; index<Al.NonZeroCount; ++index) {
-	int i, j;
-	double value;
-	if (Al.DataStruct == SparseMatrix::DSarrays) {
-	  i     = Al.row_index[index];
-	  j     = Al.column_index[index];
-	  value = Al.sp_ele[index];
-	}
-	else {
-	  i     = Al.DataS[index].vRow;
-	  j     = Al.DataS[index].vCol;
-	  value = Al.DataS[index].vEle;
-	}
-	if (value == 0.0) {
-	  continue;
-	}
-	if (k==0) {
-	  value = -value;
-	}
-	fprintf(fp,"%d %d %d %d ", k, original_l+1,i+1,j+1);
-	fprintf(fp,printFormat,value);
-	fprintf(fp,"\n");
-      }
-    }
-    else {
-      for (int i=0; i<Al.nRow; ++i) {
-	for (int j=i; j<Al.nCol; ++j) {
-	  double value = Al.de_ele[i+Al.nRow*j];
-	  if (value == 0.0) {
-	    continue;
-	  }
-	  if (k==0) {
-	    value = -value;
-	  }
-	  fprintf(fp,"%d %d %d %d ", k, original_l+1,i+1,j+1);
-	  fprintf(fp,printFormat,value);
-	  fprintf(fp,"\n");
-	}
-      }
-    }
-  }
-
-  // for SOCP
-  // rError("io:: current version does not support SOCP");
-
-  // LP is always SPARSE format
-  for (int l=0; l<LP_sp_nBlock; ++l) {
-    double value = A.LP_sp_block[l];
-    if (k==0) {
-      value = -value;
-    }
-    int ik = LP_sp_index[l];
-    int l2 = 0;
-    for (l2=0; l2<nBlock; ++l2) {
-      if (bs.blockType[l2] == BlockStruct::btLP
-	  && bs.blockNumber[l2] <= ik
-	  && ik < bs.blockNumber[l2] + bs.blockStruct[l2]) {
-	break;
-      }
-    }
-    int i = ik - bs.blockNumber[l2];
-    fprintf(fp, "%d %d %d %d ", k, l2+1, i+1, i+1);
-    fprintf(fp,printFormat,value);
-    fprintf(fp,"\n");
-  }
-}
-
-void SDPA::writeInputSparse(char* filename, char* printFormat)
-{
-  FILE* fp = NULL;
-  if ((fp=fopen(filename,"w"))==NULL) {
-    rError("Cannot Open Data File to Write" << filename);
-  }
-  fprintf(fp,"%d\n",m);
-  fprintf(fp,"%d\n",nBlock);
-  for (int l=0; l<nBlock-1; ++l) {
-    if (bs.blockType[l] == BlockStruct::btSDP) {
-      fprintf(fp,"%d,",bs.blockStruct[l]);
-    }
-    else if (bs.blockType[l] == BlockStruct::btSOCP) {
-      rError("io:: current version does not support SOCP");
-      fprintf(fp,"%d,",bs.blockStruct[l]);
-    }
-    else if (bs.blockType[l] == BlockStruct::btLP) {
-      fprintf(fp,"%d,",-bs.blockStruct[l]);
-    }
-  }
-  if (bs.blockType[nBlock-1] == BlockStruct::btSDP) {
-    fprintf(fp,"%d\n",bs.blockStruct[nBlock-1]);
-  }
-  else if (bs.blockType[nBlock-1] == BlockStruct::btSOCP) {
-    rError("io:: current version does not support SOCP");
-    fprintf(fp,"%d\n",bs.blockStruct[nBlock-1]);
-  }
-  else if (bs.blockType[nBlock-1] == BlockStruct::btLP) {
-    fprintf(fp,"%d\n",-bs.blockStruct[nBlock-1]);
-  }
-
-  if (strcmp(printFormat,NO_P_FORMAT) == 0) {
-    fprintf(fp,"%s\n",NO_P_FORMAT);
-  }
-  else {
-    for (int k=0; k<m; ++k) {
-      fprintf(fp,printFormat,inputData.b.ele[k]);
-      fprintf(fp," ");
-    }
-    fprintf(fp,"\n");
-  
-    writeSparseLinearSpace(fp, printFormat,inputData.C,0);
-    for (int k=0; k<m; ++k) {
-      // rMessage("k=" << k);
-      writeSparseLinearSpace(fp, printFormat,inputData.A[k],k+1);
-    }
-  }
-  fclose(fp);
-  return;
-}
-
-void SDPA::writeDenseLinearSpace(FILE* fp, char* printFormat,
-				 sdpa::DenseLinearSpace& X,int k)
-{
-  int  SDP_nBlock  = X.SDP_nBlock;
-  // int  SOCP_nBlock = X.SOCP_nBlock;
-  int  LP_nBlock   = X.LP_nBlock;
-  
-  for (int l=0; l<SDP_nBlock; ++l) {
-    int l2 = 0;
-    for (l2 = 0; l2 < nBlock; ++l2) {
-      if (bs.blockNumber[l2] == l) {
-	break;
-      }
-    }
-    DenseMatrix& Xl = X.SDP_block[l];
-    for (int i=0; i<Xl.nRow; ++i) {
-      for (int j=i; j<Xl.nCol; ++j) {
-	double value = Xl.de_ele[i+Xl.nRow*j];
-	if (value == 0.0) {
-	  continue;
-	}
-	fprintf(fp,"%d %d %d %d ", k,l2+1,i+1,j+1);
-	fprintf(fp,printFormat,value);
-	fprintf(fp,"\n");
-      }
-    }
-  }
-  
-  // for SOCP
-  // rError("io:: current version does not support SOCP");
-
-  // LP 
-  int l2 = 0;
-  for (int l=0; l<LP_nBlock; ++l) {
-    double value = X.LP_block[l];
-    for (l2=0; l2<nBlock; ++l2) {
-      if (bs.blockType[l2] == BlockStruct::btLP
-	  && bs.blockNumber[l2] <= l
-	  && l < bs.blockNumber[l2] + bs.blockStruct[l2]) {
-	break;
-      }
-    }
-    int i = l - bs.blockNumber[l2];
-    fprintf(fp, "%d %d %d %d ", k, l2+1, i+1, i+1);
-    fprintf(fp,printFormat,value);
-    fprintf(fp,"\n");
-  }
-}
-
-void SDPA::writeInitSparse(char* filename, char* printFormat)
-{
-  FILE* fp = NULL;
-  if ((fp=fopen(filename,"w"))==NULL) {
-    rError("Cannot Open Init File to Write" << filename);
-  }
-  if (strcmp(printFormat,NO_P_FORMAT) == 0) {
-    fprintf(fp,"%s\n",NO_P_FORMAT);
-    fclose(fp);
-    return;
-  }
-  // Note reverse primal-dual
-  for (int k=0; k<m; ++k) {
-    fprintf(fp,printFormat,-currentPt.yVec.ele[k]);
-    fprintf(fp," ");
-  }
-  fprintf(fp,"\n");
-  writeDenseLinearSpace(fp,printFormat,currentPt.zMat,1);
-  writeDenseLinearSpace(fp,printFormat,currentPt.xMat,2);
-  fclose(fp);
-  return;
-}
+// void SDPA::writeSparseLinearSpace(FILE* fp, char* printFormat,
+// 				  sdpa::SparseLinearSpace& A, int k)
+// {
+//   // bs.display();
+//   int  SDP_sp_nBlock  = A.SDP_sp_nBlock;
+//   // int  SOCP_sp_nBlock = A.SOCP_sp_nBlock;
+//   int  LP_sp_nBlock   = A.LP_sp_nBlock;
+//   int* SDP_sp_index   = A.SDP_sp_index;
+//   // int* SOCP_sp_index  = A.SOCP_sp_index;
+//   int* LP_sp_index    = A.LP_sp_index;
+//
+//   for (int l=0; l<SDP_sp_nBlock; ++l) {
+//     int l2 = SDP_sp_index[l];
+//     int original_l = 0;
+//     for (int l3=0,countSDP=0; l3<bs.nBlock; ++l3) {
+//       if (bs.blockType[l3] == BlockStruct::btSDP) {
+// 	if (countSDP == l2) {
+// 	  original_l = l3;
+// 	  break;
+// 	}
+// 	countSDP++;
+//       }
+//     }
+//     // rMessage("l2 = " << l2);
+//     SparseMatrix& Al = A.SDP_sp_block[l];
+//     if (Al.type == SparseMatrix::SPARSE) {
+//       // rMessage("sparse: Al.NonZeroCount = " << Al.NonZeroCount);
+//       for (int index=0; index<Al.NonZeroCount; ++index) {
+// 	int i, j;
+// 	double value;
+// 	if (Al.DataStruct == SparseMatrix::DSarrays) {
+// 	  i     = Al.row_index[index];
+// 	  j     = Al.column_index[index];
+// 	  value = Al.sp_ele[index];
+// 	}
+// 	else {
+// 	  i     = Al.DataS[index].vRow;
+// 	  j     = Al.DataS[index].vCol;
+// 	  value = Al.DataS[index].vEle;
+// 	}
+// 	if (value == 0.0) {
+// 	  continue;
+// 	}
+// 	if (k==0) {
+// 	  value = -value;
+// 	}
+// 	fprintf(fp,"%d %d %d %d ", k, original_l+1,i+1,j+1);
+// 	fprintf(fp,printFormat,value);
+// 	fprintf(fp,"\n");
+//       }
+//     }
+//     else {
+//       for (int i=0; i<Al.nRow; ++i) {
+// 	for (int j=i; j<Al.nCol; ++j) {
+// 	  double value = Al.de_ele[i+Al.nRow*j];
+// 	  if (value == 0.0) {
+// 	    continue;
+// 	  }
+// 	  if (k==0) {
+// 	    value = -value;
+// 	  }
+// 	  fprintf(fp,"%d %d %d %d ", k, original_l+1,i+1,j+1);
+// 	  fprintf(fp,printFormat,value);
+// 	  fprintf(fp,"\n");
+// 	}
+//       }
+//     }
+//   }
+//
+//   // for SOCP
+//   // rError("io:: current version does not support SOCP");
+//
+//   // LP is always SPARSE format
+//   for (int l=0; l<LP_sp_nBlock; ++l) {
+//     double value = A.LP_sp_block[l];
+//     if (k==0) {
+//       value = -value;
+//     }
+//     int ik = LP_sp_index[l];
+//     int l2 = 0;
+//     for (l2=0; l2<nBlock; ++l2) {
+//       if (bs.blockType[l2] == BlockStruct::btLP
+// 	  && bs.blockNumber[l2] <= ik
+// 	  && ik < bs.blockNumber[l2] + bs.blockStruct[l2]) {
+// 	break;
+//       }
+//     }
+//     int i = ik - bs.blockNumber[l2];
+//     fprintf(fp, "%d %d %d %d ", k, l2+1, i+1, i+1);
+//     fprintf(fp,printFormat,value);
+//     fprintf(fp,"\n");
+//   }
+// }
+// 
+// void SDPA::writeInputSparse(char* filename, char* printFormat)
+// {
+//   FILE* fp = NULL;
+//   if ((fp=fopen(filename,"w"))==NULL) {
+//     rError("Cannot Open Data File to Write" << filename);
+//   }
+//   fprintf(fp,"%d\n",m);
+//   fprintf(fp,"%d\n",nBlock);
+//   for (int l=0; l<nBlock-1; ++l) {
+//     if (bs.blockType[l] == BlockStruct::btSDP) {
+//       fprintf(fp,"%d,",bs.blockStruct[l]);
+//     }
+//     else if (bs.blockType[l] == BlockStruct::btSOCP) {
+//       rError("io:: current version does not support SOCP");
+//       fprintf(fp,"%d,",bs.blockStruct[l]);
+//     }
+//     else if (bs.blockType[l] == BlockStruct::btLP) {
+//       fprintf(fp,"%d,",-bs.blockStruct[l]);
+//     }
+//   }
+//   if (bs.blockType[nBlock-1] == BlockStruct::btSDP) {
+//     fprintf(fp,"%d\n",bs.blockStruct[nBlock-1]);
+//   }
+//   else if (bs.blockType[nBlock-1] == BlockStruct::btSOCP) {
+//     rError("io:: current version does not support SOCP");
+//     fprintf(fp,"%d\n",bs.blockStruct[nBlock-1]);
+//   }
+//   else if (bs.blockType[nBlock-1] == BlockStruct::btLP) {
+//     fprintf(fp,"%d\n",-bs.blockStruct[nBlock-1]);
+//   }
+// 
+//   if (strcmp(printFormat,NO_P_FORMAT) == 0) {
+//     fprintf(fp,"%s\n",NO_P_FORMAT);
+//   }
+//   else {
+//     for (int k=0; k<m; ++k) {
+//       fprintf(fp,printFormat,inputData.b.ele[k]);
+//       fprintf(fp," ");
+//     }
+//     fprintf(fp,"\n");
+//  
+//     writeSparseLinearSpace(fp, printFormat,inputData.C,0);
+//     for (int k=0; k<m; ++k) {
+//       // rMessage("k=" << k);
+//       writeSparseLinearSpace(fp, printFormat,inputData.A[k],k+1);
+//     }
+//   }
+//   fclose(fp);
+//   return;
+// }
+//
+// void SDPA::writeDenseLinearSpace(FILE* fp, char* printFormat,
+// 				 sdpa::DenseLinearSpace& X,int k)
+// {
+//   int  SDP_nBlock  = X.SDP_nBlock;
+//   // int  SOCP_nBlock = X.SOCP_nBlock;
+//   int  LP_nBlock   = X.LP_nBlock;
+//  
+//   for (int l=0; l<SDP_nBlock; ++l) {
+//     int l2 = 0;
+//     for (l2 = 0; l2 < nBlock; ++l2) {
+//       if (bs.blockNumber[l2] == l) {
+// 	break;
+//       }
+//     }
+//     DenseMatrix& Xl = X.SDP_block[l];
+//     for (int i=0; i<Xl.nRow; ++i) {
+//       for (int j=i; j<Xl.nCol; ++j) {
+// 	double value = Xl.de_ele[i+Xl.nRow*j];
+// 	if (value == 0.0) {
+// 	  continue;
+// 	}
+// 	fprintf(fp,"%d %d %d %d ", k,l2+1,i+1,j+1);
+// 	fprintf(fp,printFormat,value);
+// 	fprintf(fp,"\n");
+//       }
+//     }
+//   }
+//  
+//   // for SOCP
+//   // rError("io:: current version does not support SOCP");
+//
+//   // LP 
+//   int l2 = 0;
+//   for (int l=0; l<LP_nBlock; ++l) {
+//     double value = X.LP_block[l];
+//     for (l2=0; l2<nBlock; ++l2) {
+//       if (bs.blockType[l2] == BlockStruct::btLP
+// 	  && bs.blockNumber[l2] <= l
+// 	  && l < bs.blockNumber[l2] + bs.blockStruct[l2]) {
+// 	break;
+//       }
+//     }
+//     int i = l - bs.blockNumber[l2];
+//     fprintf(fp, "%d %d %d %d ", k, l2+1, i+1, i+1);
+//     fprintf(fp,printFormat,value);
+//     fprintf(fp,"\n");
+//   }
+// }
+//
+// void SDPA::writeInitSparse(char* filename, char* printFormat)
+// {
+//   FILE* fp = NULL;
+//   if ((fp=fopen(filename,"w"))==NULL) {
+//     rError("Cannot Open Init File to Write" << filename);
+//   }
+//   if (strcmp(printFormat,NO_P_FORMAT) == 0) {
+//     fprintf(fp,"%s\n",NO_P_FORMAT);
+//     fclose(fp);
+//     return;
+//   }
+//   // Note reverse primal-dual
+//   for (int k=0; k<m; ++k) {
+//     fprintf(fp,printFormat,-currentPt.yVec.ele[k]);
+//     fprintf(fp," ");
+//   }
+//   fprintf(fp,"\n");
+//   writeDenseLinearSpace(fp,printFormat,currentPt.zMat,1);
+//   writeDenseLinearSpace(fp,printFormat,currentPt.xMat,2);
+//   fclose(fp);
+//   return;
+// }
   
 void SDPA::terminate()
 {
@@ -1262,7 +1285,7 @@ void SDPA::copyCurrentToInit()
   // initPt_xMat.copyFrom(currentPt.xMat);
   // initPt_zMat.copyFrom(currentPt.zMat);
   // Note reverse primal-dual
-  Lal::let(currentPt.yVec,'=',currentPt.yVec,'*',&DMONE);
+  Lal::let(currentPt.yVec,'=',currentPt.yVec,'*',&MMONE);
   return;
 }
 

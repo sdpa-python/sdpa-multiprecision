@@ -229,6 +229,13 @@ InputData::~InputData()
   terminate();
 }
 
+void InputData::initialize(BlockStruct& bs)
+{
+  SDP_nBlock  = bs.SDP_nBlock;
+  SOCP_nBlock = bs.SOCP_nBlock;
+  LP_nBlock   = bs.LP_nBlock;
+}
+
 void InputData::initialize_bVec(int m)
 {
   b.initialize(m);

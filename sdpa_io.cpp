@@ -138,11 +138,19 @@ void IO::read(FILE* fpData, int& nBlock)
   fscanf(fpData,"%d",&nBlock);
 }
 
-void IO::read(FILE* fpData, 
-			  int nBlock, int* blockStruct)
+void IO::read(FILE* fpData, BlockStruct& bs)
 {
-  for (int l=0; l<nBlock; ++l) {
-    fscanf(fpData,"%*[^0-9+-]%d",&blockStruct[l]);
+  for (int l=0; l<bs.nBlock; ++l) {
+    fscanf(fpData,"%*[^0-9+-]%d",&bs.blockStruct[l]);
+  }
+  // only for SDP and LP
+  for (int l=0; l<bs.nBlock; ++l) {
+    if (bs.blockStruct[l] > 0 ) {
+      bs.blockType[l] = BlockStruct::btSDP;
+    }
+    if (bs.blockStruct[l] < 0 ) {
+      bs.blockType[l] = BlockStruct::btLP;
+    }
   }
 }
 
@@ -581,7 +589,7 @@ void IO::read(FILE* fpData, int m,
 	      int LP_nBlock, 
               int nBlock, 
               int* blockStruct,
-              int* blockType, 
+              sdpa::BlockStruct::BlockType* blockType, 
               int* blockNumber,
 	      InputData& inputData, bool isDataSparse)
 {
@@ -623,7 +631,7 @@ void IO::setBlockStruct(FILE* fpData, InputData& inputData, int m,
                         int* SOCP_blockStruct,
                         int LP_nBlock,
                         int nBlock, int* blockStruct, 
-                        int* blockType, int* blockNumber,
+                        sdpa::BlockStruct::BlockType* blockType, int* blockNumber,
                         long position, bool isDataSparse)
 {
   // seed the positon of C in the fpData
@@ -850,7 +858,7 @@ void IO::setElement(FILE* fpData, InputData& inputData, int m,
                     int SOCP_nBlock, int* SOCP_blockStruct, 
                     int LP_nBlock, 
                     int nBlock, int* blockStruct, 
-                    int* blockType, int* blockNumber,
+                    sdpa::BlockStruct::BlockType* blockType, int* blockNumber,
                     long position, bool isDataSparse)
 {
   // in Sparse, read C,A[k]
@@ -1285,7 +1293,7 @@ void IO::printLastInfo(int pIteration,
 		       double cputime,
 		       int nBlock,
 		       int* blockStruct,
-		       int* blockType,
+		       sdpa::BlockStruct::BlockType* blockType,
 		       int* blockNumber,
 		       InputData& inputData,
                        WorkVariables& work,
@@ -1530,7 +1538,7 @@ void IO::printLastInfo(int pIteration,
 void IO::displayDenseLinarSpaceLast(DenseLinearSpace& aMat,
 									int nBlock,
 									int* blockStruct,
-									int* blockType,
+									sdpa::BlockStruct::BlockType* blockType,
 									int* blockNumber,
 									FILE* fpout)
 {

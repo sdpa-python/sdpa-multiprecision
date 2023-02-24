@@ -33,8 +33,7 @@ class IO
 public:
   static void read(FILE* fpData, FILE* fpout, int& m, char* str);
   static void read(FILE* fpData, int& nBlock);
-  static void read(FILE* fpData,
-				   int nBlock, int* blockStruct);
+  static void read(FILE* fpData, BlockStruct& bs);
   static void read(FILE* fpData, Vector& b);
   static void read(FILE* fpData, DenseLinearSpace& xMat,
 		   Vector& yVec, DenseLinearSpace& zMat,
@@ -43,7 +42,7 @@ public:
 		   int SDP_nBlock,int* SDP_blockStruct,
 		   int SOCP_nBlock,int* SOCP_blockStruct,
 		   int LP_nBlock, 
-		   int nBlock, int* blockStruct, int* blockType, int* blockNumber,
+		   int nBlock, int* blockStruct, sdpa::BlockStruct::BlockType* blockType, int* blockNumber,
 		   InputData& inputData, bool isDataSparse);
 
   // 2008/02/27 kazuhide nakata   
@@ -76,7 +75,7 @@ public:
                              int* SOCP_blockStruct,
                              int LP_nBlock,
                              int nBlock, int* blockStruct, 
-                             int* blockType, int* blockNumber,
+                             sdpa::BlockStruct::BlockType* blockType, int* blockNumber,
                              long position, bool isDataSparse);
   
   // 2008/02/27 kazuhide nakata   
@@ -86,7 +85,7 @@ public:
                          int SOCP_nBlock, int* SOCP_blockStruct, 
                          int LP_nBlock, 
                          int nBlock, int* blockStruct, 
-                         int* blockType, int* blockNumber,
+                         sdpa::BlockStruct::BlockType* blockType, int* blockNumber,
                          long position, bool isDataSparse);
 
   static void printHeader(FILE* fpout, FILE* Display);
@@ -129,7 +128,7 @@ public:
 			    double cputime,
 			    int nBlok,
 			    int* blockStruct,
-			    int* blockType,
+			    sdpa::BlockStruct::BlockType* blockType,
 			    int* blockNumber,
 			    InputData& inputData,
                             WorkVariables& work,
@@ -143,7 +142,7 @@ public:
   static void displayDenseLinarSpaceLast(DenseLinearSpace& aMat,
                                          int nBlock,
                                          int* blockStruct,
-                                         int* blockType,
+                                         sdpa::BlockStruct::BlockType* blockType,
                                          int* blockNumber,
                                          FILE* fpout);
 

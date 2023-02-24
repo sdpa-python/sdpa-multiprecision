@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 #define __sdpa_detaset_h__
 
 #include <sdpa_jordan.h>
+#include <sdpa_block.h>
 
 namespace sdpa {
 
@@ -114,6 +115,7 @@ public:
 
   InputData();
   ~InputData();
+  void initialize(BlockStruct& bs);
   void terminate();
   void initialize_bVec(int m);
   void initialize_CMat(int SDP_nBlock, int* SDP_blockStruct, 

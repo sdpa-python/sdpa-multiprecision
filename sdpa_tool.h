@@ -55,6 +55,30 @@ exit(false)
 #define rNewCheck() ;
 #endif
 
+#if 1
+#define NewArray(val,type,number) \
+  {val = NULL; \
+    try{ val = new type[number]; } \
+    catch(bad_alloc){ \
+        rMessage("Memory Exhausted (bad_alloc)"); abort(); } \
+    catch(...){ \
+        rMessage("Fatal Error (related memory allocation"); abort(); } \
+  }
+#else
+#define NewArray(val,type,number) \
+  {rMessage("New Invoked"); \
+   val = NULL; val = new type[number]; \
+   if  (val==NULL) {rError("Over Memory");} \
+  }
+#endif
+
+#define DeleteArray(val) \
+  { if  (val!=NULL) { \
+      delete[] val; \
+      val = NULL; \
+    } \
+  }
+
 #define REVERSE_PRIMAL_DUAL 1
 
 

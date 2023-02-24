@@ -1,15 +1,15 @@
 bin_PROGRAMS = sdpa_gmp
 
 if SYSTEM_MPACK
-sdpa_gmp_SOURCES = sdpa_chordal.cpp sdpa_dataset.cpp sdpa_io.cpp \
-sdpa_jordan.cpp sdpa_linear.cpp sdpa_main.cpp sdpa_newton.cpp sdpa_parts.cpp \
-sdpa_struct.cpp sdpa_tool.cpp sdpa_chordal.h sdpa_dataset.h \
+sdpa_gmp_SOURCES = sdpa_block.cpp sdpa_call.cpp sdpa_chordal.cpp sdpa_dataset.cpp sdpa_io.cpp \
+sdpa_jordan.cpp sdpa_linear.cpp sdpa_exe.cpp sdpa_solve.cpp sdpa_newton.cpp sdpa_parts.cpp \
+sdpa_struct.cpp sdpa_tool.cpp sdpa_block.h sdpa_call.h sdpa_chordal.h sdpa_dataset.h \
 sdpa_include.h sdpa_io.h sdpa_jordan.h sdpa_linear.h sdpa_newton.h \
 sdpa_parts.h sdpa_right.h sdpa_struct.h sdpa_tool.h
 else
-sdpa_gmp_SOURCES = sdpa_chordal.cpp sdpa_dataset.cpp sdpa_io.cpp \
-sdpa_jordan.cpp sdpa_linear.cpp sdpa_main.cpp sdpa_newton.cpp sdpa_parts.cpp \
-sdpa_struct.cpp sdpa_tool.cpp sdpa_chordal.h sdpa_dataset.h \
+sdpa_gmp_SOURCES = sdpa_block.cpp sdpa_call.cpp sdpa_chordal.cpp sdpa_dataset.cpp sdpa_io.cpp \
+sdpa_jordan.cpp sdpa_linear.cpp sdpa_exe.cpp sdpa_solve.cpp sdpa_newton.cpp sdpa_parts.cpp \
+sdpa_struct.cpp sdpa_tool.cpp sdpa_block.h sdpa_call.h sdpa_chordal.h sdpa_dataset.h \
 sdpa_include.h sdpa_io.h sdpa_jordan.h sdpa_linear.h sdpa_newton.h \
 sdpa_parts.h sdpa_right.h sdpa_struct.h sdpa_tool.h \
 mpack/Rdot.cpp  mpack/Rtrsm.cpp mpack/Rsyrk.cpp mpack/Raxpy.cpp \
