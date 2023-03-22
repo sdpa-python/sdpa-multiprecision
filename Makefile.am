@@ -1,17 +1,17 @@
-bin_PROGRAMS = sdpa_gmp
-
-if SYSTEM_MPACK
-sdpa_gmp_SOURCES = sdpa_block.cpp sdpa_call.cpp sdpa_chordal.cpp sdpa_dataset.cpp sdpa_io.cpp \
-sdpa_jordan.cpp sdpa_linear.cpp sdpa_exe.cpp sdpa_solve.cpp sdpa_newton.cpp sdpa_parts.cpp \
-sdpa_struct.cpp sdpa_tool.cpp sdpa_block.h sdpa_call.h sdpa_chordal.h sdpa_dataset.h \
+include_HEADERS = sdpa_block.h sdpa_call.h sdpa_chordal.h sdpa_dataset.h \
 sdpa_include.h sdpa_io.h sdpa_jordan.h sdpa_linear.h sdpa_newton.h \
 sdpa_parts.h sdpa_right.h sdpa_struct.h sdpa_tool.h
+
+lib_LIBRARIES = libsdpa_gmp.a
+
+if SYSTEM_MPACK
+libsdpa_gmp_a_SOURCES = sdpa_block.cpp sdpa_call.cpp sdpa_chordal.cpp sdpa_dataset.cpp sdpa_io.cpp \
+sdpa_jordan.cpp sdpa_linear.cpp sdpa_solve.cpp sdpa_newton.cpp sdpa_parts.cpp \
+sdpa_struct.cpp sdpa_tool.cpp
 else
-sdpa_gmp_SOURCES = sdpa_block.cpp sdpa_call.cpp sdpa_chordal.cpp sdpa_dataset.cpp sdpa_io.cpp \
-sdpa_jordan.cpp sdpa_linear.cpp sdpa_exe.cpp sdpa_solve.cpp sdpa_newton.cpp sdpa_parts.cpp \
-sdpa_struct.cpp sdpa_tool.cpp sdpa_block.h sdpa_call.h sdpa_chordal.h sdpa_dataset.h \
-sdpa_include.h sdpa_io.h sdpa_jordan.h sdpa_linear.h sdpa_newton.h \
-sdpa_parts.h sdpa_right.h sdpa_struct.h sdpa_tool.h \
+libsdpa_gmp_a_SOURCES = sdpa_block.cpp sdpa_call.cpp sdpa_chordal.cpp sdpa_dataset.cpp sdpa_io.cpp \
+sdpa_jordan.cpp sdpa_linear.cpp sdpa_solve.cpp sdpa_newton.cpp sdpa_parts.cpp \
+sdpa_struct.cpp sdpa_tool.cpp \
 mpack/Rdot.cpp  mpack/Rtrsm.cpp mpack/Rsyrk.cpp mpack/Raxpy.cpp \
 mpack/Rgemm.cpp mpack/Rtrmm.cpp mpack/Rtrsv.cpp mpack/iMlaenv.cpp\
 mpack/Rlamch.cpp mpack/Rlascl.cpp mpack/Rsytrd.cpp mpack/Rsterf.cpp\
@@ -26,6 +26,10 @@ mpack/Rtrmv.cpp mpack/Rsteqr.cpp mpack/Rlaset.cpp mpack/Rlaev2.cpp \
 mpack/Rlasr.cpp mpack/Rlartg.cpp mpack/Rswap.cpp mpack/Rsyev.cpp\
 mpack/Rlansy.cpp mpack/Mutils.cpp
 endif
+libsdpa_gmp_a_CXXFLAGS= $(pthread_cflags) -I$(SPOOLES_INCLUDEDIR) -DUseMETIS=0 -I$(GMP_INCLUDEDIR) $(OPENMPFLAGS) -I./mpack
+
+bin_PROGRAMS = sdpa_gmp
+sdpa_gmp_SOURCES = sdpa_exe.cpp
 
 if ENABLE_SHARED
 else
@@ -33,10 +37,10 @@ sdpa_gmp_LDFLAGS = -static
 endif
 
 if SYSTEM_MPACK
-sdpa_gmp_LDADD = $(pthread_lib) -L$(SPOOLES_LIBDIR) -lspooles -L$(GMP_LIBDIR) -lgmp -lgmpxx $(OPENMPLIB) -L$(MPACK_LIBDIR) -lmlapack_gmp -lmblas_gmp
+sdpa_gmp_LDADD = ./libsdpa_gmp.a $(pthread_lib) -L$(SPOOLES_LIBDIR) -lspooles -L$(GMP_LIBDIR) -lgmp -lgmpxx $(OPENMPLIB) -L$(MPACK_LIBDIR) -lmlapack_gmp -lmblas_gmp
 sdpa_gmp_CXXFLAGS= $(pthread_cflags) -I$(SPOOLES_INCLUDEDIR) -DUseMETIS=0 -I$(GMP_INCLUDEDIR) $(OPENMPFLAGS) -I$(MPACK_INCLUDEDIR)
 else
-sdpa_gmp_LDADD = $(pthread_lib) -L$(SPOOLES_LIBDIR) -lspooles -L$(GMP_LIBDIR) -lgmp -lgmpxx $(OPENMPLIB)
+sdpa_gmp_LDADD = ./libsdpa_gmp.a $(pthread_lib) -L$(SPOOLES_LIBDIR) -lspooles -L$(GMP_LIBDIR) -lgmp -lgmpxx $(OPENMPLIB)
 sdpa_gmp_CXXFLAGS= $(pthread_cflags) -I$(SPOOLES_INCLUDEDIR) -DUseMETIS=0 -I$(GMP_INCLUDEDIR) $(OPENMPFLAGS) -I./mpack
 endif
 

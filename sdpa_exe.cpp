@@ -246,6 +246,7 @@ static void argumentAnalysis(SDPA& Problem1,
 int main(int argc, char** argv)
 {
   TimeStart(ALL_START1);
+  mpf_set_default_prec(200);
   SDPA Problem1;
   time_t ltime;
   time(&ltime);

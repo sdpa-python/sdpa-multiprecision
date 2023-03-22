@@ -179,7 +179,7 @@ public:
   mpf_class getDualObj();
   mpf_class getPrimalError();
   mpf_class getDualError();
-  // double getDigits();
+  double getDigits();
   int    getIteration();
   mpf_class getMu();
   mpf_class getDualityGap();

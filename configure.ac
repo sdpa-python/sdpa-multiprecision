@@ -3,7 +3,8 @@ dnl Configure for SDPA-GMP 7.1.2
 dnl
 
 AC_INIT(sdpa-gmp, 7.1.2)
-AM_INIT_AUTOMAKE([1.8 gnu subdir-objects])
+AM_INIT_AUTOMAKE([1.8 gnu subdir-objects foreign])
+AC_PROG_RANLIB
 AC_PROG_CC
 AC_PROG_CXX
 AC_CANONICAL_HOST

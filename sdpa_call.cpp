@@ -774,17 +774,14 @@ mpf_class SDPA::getDualError()
   return currentRes.normPrimalVec;
 }
 
-/*
-TODO: Remove or re-enable this function.
-*/
-// double SDPA::getDigits()
-// {
-//   double mean =  (fabs(solveInfo.objValPrimal)
-// 		  + fabs(solveInfo.objValDual)) / 2.0;
-//   double PDgap = getDualityGap();
-//   double digits = -log10(fabs(PDgap/mean));
-//   return digits;
-// }
+double SDPA::getDigits()
+{
+  double mean =  (fabs(mpf_get_d(solveInfo.objValPrimal.get_mpf_t()))
+		  + fabs(mpf_get_d(solveInfo.objValDual.get_mpf_t()))) / 2.0;
+  double PDgap = mpf_get_d(getDualityGap().get_mpf_t());
+  double digits = -log10(fabs(PDgap/mean));
+  return digits;
+}
 
 int SDPA::getIteration()
 {

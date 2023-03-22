@@ -341,7 +341,7 @@ void Newton::initialize_bMat(int m, Chordal& chordal, InputData& inputData,
   case -1: {
     bMat_type = DENSE;
     printf("DENSE computations\n");
-    fprintf(fpOut,"DENSE computation\n");
+    // fprintf(fpOut,"DENSE computation\n");
     initialize_dense_bMat(m);
     break;
   }
@@ -352,7 +352,7 @@ void Newton::initialize_bMat(int m, Chordal& chordal, InputData& inputData,
   case 1: {
     bMat_type = SPARSE;
     printf("SPARSE computation\n");
-    fprintf(fpOut,"SPARSE computation\n");
+    // fprintf(fpOut,"SPARSE computation\n");
     initialize_sparse_bMat(m, chordal.newToOldIV_MMD, chordal.symbfacIVL_MMD);
     make_aggrigateIndex(inputData);
     break;
@@ -360,7 +360,7 @@ void Newton::initialize_bMat(int m, Chordal& chordal, InputData& inputData,
   case 2: {
     bMat_type = SPARSE;
     printf("SPARSE computation\n");
-    fprintf(fpOut,"SPARSE computation\n");
+    // fprintf(fpOut,"SPARSE computation\n");
     initialize_sparse_bMat(m, chordal.newToOldIV_ND, chordal.symbfacIVL_ND);
     make_aggrigateIndex(inputData);
     break;
@@ -368,7 +368,7 @@ void Newton::initialize_bMat(int m, Chordal& chordal, InputData& inputData,
   case 3: {
     bMat_type = SPARSE;
     printf("SPARSE computation\n");
-    fprintf(fpOut,"SPARSE computation\n");
+    // fprintf(fpOut,"SPARSE computation\n");
     initialize_sparse_bMat(m, chordal.newToOldIV_MS, chordal.symbfacIVL_MS);
     make_aggrigateIndex(inputData);
     break;
@@ -376,7 +376,7 @@ void Newton::initialize_bMat(int m, Chordal& chordal, InputData& inputData,
   case 4: {
     bMat_type = SPARSE;
     printf("SPARSE computation\n");
-    fprintf(fpOut,"SPARSE computation\n");
+    // fprintf(fpOut,"SPARSE computation\n");
     initialize_sparse_bMat(m, chordal.newToOldIV_NDMS, chordal.symbfacIVL_NDMS);
     make_aggrigateIndex(inputData);
     break;
