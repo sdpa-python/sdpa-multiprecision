@@ -9,5 +9,9 @@
 0.9     double 0.0 < gammaStar  <  1.0;
 1.0E-30	double 0.0 < epsilonDash;
 200     precision
+%+18.12Fe     char*  xPrint   (default %+18.12Fe,   NOPRINT skips printout)
+%+18.12Fe     char*  XPrint   (default %+18.12Fe,   NOPRINT skips printout)
+%+18.12Fe     char*  YPrint   (default %+18.12Fe,   NOPRINT skips printout)
+%+10.16e   char*  infPrint (default %+10.16e, NOPRINT skips printout)
 
 

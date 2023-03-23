@@ -135,28 +135,25 @@ void SDPA::setParameterEpsilonDash (double epsilonDash)
   param.epsilonDash = epsilonDash;
 }
 
-/*
-TODO: Remove or re-enable these functions.
-*/
-// void SDPA::setParameterPrintXVec(char* xPrint)
-// {
-//   strncpy(param.xPrint,xPrint,PRINT_DEFAULT_LENGTH);
-// }
-//
-// void SDPA::setParameterPrintXMat(char* XPrint)
-// {
-//   strncpy(param.XPrint,XPrint,PRINT_DEFAULT_LENGTH);
-// }
-//
-// void SDPA::setParameterPrintYMat(char* YPrint)
-// {
-//   strncpy(param.YPrint,YPrint,PRINT_DEFAULT_LENGTH);
-// }
-//
-// void SDPA::setParameterPrintInformation(char* infPrint)
-// {
-//   strncpy(param.infPrint,infPrint,PRINT_DEFAULT_LENGTH);
-// }
+void SDPA::setParameterPrintXVec(char* xPrint)
+{
+  strncpy(param.xPrint,xPrint,PRINT_DEFAULT_LENGTH);
+}
+
+void SDPA::setParameterPrintXMat(char* XPrint)
+{
+  strncpy(param.XPrint,XPrint,PRINT_DEFAULT_LENGTH);
+}
+
+void SDPA::setParameterPrintYMat(char* YPrint)
+{
+  strncpy(param.YPrint,YPrint,PRINT_DEFAULT_LENGTH);
+}
+
+void SDPA::setParameterPrintInformation(char* infPrint)
+{
+  strncpy(param.infPrint,infPrint,PRINT_DEFAULT_LENGTH);
+}
 
 void SDPA::setDisplay(FILE* Display)
 {
@@ -234,25 +231,22 @@ double SDPA::getParameterEpsilonDash()
 {
   return param.epsilonDash;
 }
-/*
-TODO: Remove or re-enable these functions.
-*/
-// char* SDPA::getParameterPrintXVec()
-// {
-//   return param.xPrint;
-// }
-// char* SDPA::getParameterPrintXMat()
-// {
-//   return param.XPrint;
-// }
-// char* SDPA::getParameterPrintYMat()
-// {
-//   return param.YPrint;
-// }
-// char* SDPA::getParameterPrintInformation()
-// {
-//   return param.infPrint;
-// }
+char* SDPA::getParameterPrintXVec()
+{
+  return param.xPrint;
+}
+char* SDPA::getParameterPrintXMat()
+{
+  return param.XPrint;
+}
+char* SDPA::getParameterPrintYMat()
+{
+  return param.YPrint;
+}
+char* SDPA::getParameterPrintInformation()
+{
+  return param.infPrint;
+}
 FILE* SDPA::getDisplay()
 {
   return Display;

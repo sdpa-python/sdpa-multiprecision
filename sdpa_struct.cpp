@@ -99,23 +99,25 @@ void Vector::setZero()
   initialize(zero);
 }
 
-void Vector::display(FILE* fpout)
+void Vector::display(FILE* fpout, char* printFormat)
 {
   if (fpout == NULL) {
     return;
   }
   fprintf(fpout,"{");
   for (int j=0; j<nDim-1; ++j) {
-    gmp_fprintf(fpout,P_FORMAT",",ele[j].get_mpf_t());
+    gmp_fprintf(fpout,printFormat,ele[j].get_mpf_t());
+    fprintf(fpout,",");
   }
   if (nDim>0) {
-    gmp_fprintf(fpout,P_FORMAT"}\n",ele[nDim-1].get_mpf_t());
+    gmp_fprintf(fpout,printFormat,ele[nDim-1].get_mpf_t());
+    fprintf(fpout,"}\n");
   } else {
     fprintf(fpout,"  }\n");
   }
 }
 
-void Vector::display(FILE* fpout,mpf_class scalar)
+void Vector::display(FILE* fpout,mpf_class scalar, char* printFormat)
 {
   if (fpout == NULL) {
     return;
@@ -123,11 +125,13 @@ void Vector::display(FILE* fpout,mpf_class scalar)
   fprintf(fpout,"{");
   for (int j=0; j<nDim-1; ++j) {
     mpf_class mtmp=ele[j]*scalar;
-    gmp_fprintf(fpout,P_FORMAT",",mtmp.get_mpf_t());
+    gmp_fprintf(fpout,printFormat,mtmp.get_mpf_t());
+    fprintf(fpout,",");
   }
   if (nDim>0) {
     mpf_class mtmp=ele[nDim-1]*scalar;
-    gmp_fprintf(fpout,P_FORMAT"}\n",mtmp.get_mpf_t());
+    gmp_fprintf(fpout,printFormat,mtmp.get_mpf_t());
+    fprintf(fpout,"}\n");
   } else {
     fprintf(fpout,"  }\n");
   }
@@ -734,7 +738,7 @@ void DenseMatrix::terminate()
   }
 }
 
-void DenseMatrix::display(FILE* fpout)
+void DenseMatrix::display(FILE* fpout, char* printFormat)
 {
   if (fpout == NULL) {
     return;
@@ -750,17 +754,21 @@ void DenseMatrix::display(FILE* fpout)
       }
       fprintf(fpout,"{");
       for (int j=0; j<nCol-1; ++j) {
-        gmp_fprintf(fpout, P_FORMAT",",de_ele[i+nCol*j].get_mpf_t());
+        gmp_fprintf(fpout, printFormat,de_ele[i+nCol*j].get_mpf_t());
+        fprintf(fpout,",");
       }
-      gmp_fprintf(fpout,P_FORMAT" },\n",de_ele[i+nCol*(nCol-1)].get_mpf_t());
+      gmp_fprintf(fpout,printFormat,de_ele[i+nCol*(nCol-1)].get_mpf_t());
+      fprintf(fpout," },\n");
     }
     if (nRow>1) {
       fprintf(fpout,"  {");
     }
     for (int j=0; j<nCol-1; ++j) {
-      gmp_fprintf(fpout,P_FORMAT",",de_ele[(nRow-1)+nCol*j].get_mpf_t());
+      gmp_fprintf(fpout,printFormat,de_ele[(nRow-1)+nCol*j].get_mpf_t());
+      fprintf(fpout,",");
     }
-    gmp_fprintf(fpout,P_FORMAT" }",de_ele[(nRow-1)+nCol*(nCol-1)].get_mpf_t());
+    gmp_fprintf(fpout,printFormat,de_ele[(nRow-1)+nCol*(nCol-1)].get_mpf_t());
+    fprintf(fpout," }");
     if (nRow>1) {
       fprintf(fpout,"   }\n");
     } else {
@@ -1606,7 +1614,7 @@ void DenseLinearSpace::terminate()
 
 }
 
-void DenseLinearSpace::display(FILE* fpout)
+void DenseLinearSpace::display(FILE* fpout, char* printFormat)
 {
   if (fpout == NULL) {
     return;

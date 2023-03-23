@@ -144,7 +144,8 @@ public:
                                          int* blockStruct,
                                          sdpa::BlockStruct::BlockType* blockType,
                                          int* blockNumber,
-                                         FILE* fpout);
+                                         FILE* fpout,
+                                         char* printFormat = ((char*)P_FORMAT));
 
 };
 

@@ -44,8 +44,8 @@ public:
   void terminate();
 
   void setZero();
-  void display(FILE* fpout = stdout);
-  void display(FILE* fpout,mpf_class scalar);
+  void display(FILE* fpout = stdout, char* printFormat = ((char*)P_FORMAT));
+  void display(FILE* fpout,mpf_class scalar, char* printFormat = ((char*)P_FORMAT));
   bool copyFrom(Vector& other);
 };
 
@@ -127,7 +127,7 @@ public:
   void initialize(int nRow,int nCol, Type type);
   void terminate();
   
-  void display(FILE* fpout = stdout);
+  void display(FILE* fpout = stdout, char* printFormat = ((char*)P_FORMAT));
   bool copyFrom(DenseMatrix& other);
   bool copyFrom(SparseMatrix& other);
 
@@ -222,7 +222,7 @@ class DenseLinearSpace
 		  int LP_nBlock);
   void terminate();
 
-  void display(FILE* fpout = stdout);
+  void display(FILE* fpout = stdout, char* printFormat = ((char*)P_FORMAT));
   bool copyFrom(DenseLinearSpace& other);
   void setElement_SDP(int block, int nCol, int nRow, mpf_class ele);
   void setElement_SOCP(int block, int nCol, int nRow, mpf_class ele);

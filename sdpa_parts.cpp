@@ -220,7 +220,17 @@ void Parameter::setDefaultParameter(Parameter::parameterType type)
     precision    =  200;
     mpf_set_default_prec(precision);
   }    
+  strcpy(xPrint,xPRINT_DEFAULT);
+  strcpy(XPrint,XPRINT_DEFAULT);
+  strcpy(YPrint,YPRINT_DEFAULT);
+  strcpy(infPrint,infPRINT_DEFAULT);
 }
+
+char Parameter::xPRINT_DEFAULT[PRINT_DEFAULT_LENGTH] = "%+18.12Fe";
+char Parameter::XPRINT_DEFAULT[PRINT_DEFAULT_LENGTH] = "%+18.12Fe";
+char Parameter::YPRINT_DEFAULT[PRINT_DEFAULT_LENGTH] = "%+18.12Fe";
+char Parameter::infPRINT_DEFAULT[PRINT_DEFAULT_LENGTH] = "%+10.16e";
+
 void Parameter::readFile(FILE* parameterFile)
 {
   fscanf(parameterFile,"%d%*[^\n]",&maxIteration);
@@ -234,6 +244,10 @@ void Parameter::readFile(FILE* parameterFile)
   fscanf(parameterFile,"%lf%*[^\n]",&gammaStar);
   fscanf(parameterFile,"%lf%*[^\n]",&epsilonDash);
   fscanf(parameterFile,"%d%*[^\n]",&precision);
+  fscanf(parameterFile,"%s %*[^\n]",xPrint);
+  fscanf(parameterFile,"%s %*[^\n]",XPrint);
+  fscanf(parameterFile,"%s %*[^\n]",YPrint);
+  fscanf(parameterFile,"%s %*[^\n]",infPrint);
   mpf_set_default_prec(precision);
 }
 
@@ -254,6 +268,10 @@ void Parameter::display(FILE* fpout)
   fprintf(fpout, "gammaStar    = %8.3e\n",gammaStar   );
   fprintf(fpout, "epsilonDash  = %8.3e\n",epsilonDash );
   fprintf(fpout, "precision    =    %d\n",precision );
+  fprintf(fpout, "xPrint       = %s \n", xPrint );
+  fprintf(fpout, "XPrint       = %s \n", XPrint );
+  fprintf(fpout, "YPrint       = %s \n", YPrint );
+  fprintf(fpout, "infPrint     = %s \n", infPrint );
   return;
 }
 
