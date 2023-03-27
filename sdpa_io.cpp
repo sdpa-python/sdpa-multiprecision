@@ -397,7 +397,7 @@ void IO::read(FILE* fpData, int m,
 		  mpf_class tmp;
 		  gmp_fscanf(fpData,"%*[^0-9+-]%Fe",&tmp);
 		  if (tmp!=0.0) {
-			LP_CNonZeroCount[blockNumber[l2]+j]++;
+			LP_CNonZeroCount[blockNumber[l2]+j]=true;
 		  }
 		}
 	  } else {

@@ -99,7 +99,9 @@ public:
 			     const struct timeval & end);
 };
 
-#if 1 // count time with process time
+#define PROCESS_TIME 0
+#if PROCESS_TIME // count time with process time
+#include <sys/times.h>
 #define TimeStart(START__) \
    static double START__; START__ = Time::rGetUseTime()
 #define TimeEnd(END__) \

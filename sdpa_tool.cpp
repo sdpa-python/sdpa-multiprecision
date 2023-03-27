@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 -----------------------------------------*/
 
 #include <sdpa_tool.h>
-#include <sys/times.h>
 #include <sys/time.h>
 #include <time.h>
 
@@ -46,9 +45,13 @@ mpf_class MMONE = -1.0;
 
 double Time::rGetUseTime()
 {
+  #if PROCESS_TIME
   struct tms TIME;
   times(&TIME);
   return (double)TIME.tms_utime/(double)CLK_TCK; 
+  #else
+  return 0.0;
+  #endif 
 }
 
 void Time::rSetTimeVal(struct timeval& targetVal)
