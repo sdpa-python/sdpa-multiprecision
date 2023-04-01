@@ -46,7 +46,7 @@ void SDPA::initializeSolve()
           bs.LP_nBlock);
   int nBlock2 = bs.SDP_nBlock + bs.SOCP_nBlock + bs.LP_nBlock;
   chordal.ordering_bMat(m, nBlock2, inputData, fpout);
-  newton.initialize_bMat(m, chordal,inputData, fpout);
+  newton.initialize_bMat(m, chordal,inputData, Display, fpout);
   newton.computeFormula_SDP(inputData,0.0,KAPPA);
 
   work.initialize(m, bs.SDP_nBlock, bs.SDP_blockStruct,

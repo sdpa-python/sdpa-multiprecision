@@ -116,7 +116,7 @@ public:
   void initialize_sparse_bMat(int m, IV *newToOldIV,  IVL *symbfacIVL);
   // 2008/03/12 kazuhide nakata
   void initialize_bMat(int m, Chordal& chordal, InputData& inputData, 
-                       FILE* fpOut);
+                       FILE* Display, FILE* fpOut);
 
   void make_aggrigateIndex_SDP(InputData& inputData);
   void make_aggrigateIndex_SOCP(InputData& inputData);
