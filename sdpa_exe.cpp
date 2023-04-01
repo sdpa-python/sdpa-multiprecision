@@ -279,7 +279,7 @@ int main(int argc, char** argv)
   if ((fpresult = fopen(resultFileName,"w")) == NULL) {
     rError("Cannot Open Result File : " << resultFileName);
   }
-  fprintf(fpresult,"SDPA start at [%s]\n",string_time);
+  fprintf(fpresult,"SDPA Multiprecision start at [%s]\n",string_time);
 
   Problem1.setResultFile(fpresult);
   if (paramFileName == NULL) {

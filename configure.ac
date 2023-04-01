@@ -1,8 +1,8 @@
 nl
-dnl Configure for SDPA-GMP 7.1.2
+dnl Configure for SDPA Multiprecision 0.1
 dnl
 
-AC_INIT(sdpa-gmp, 7.1.2)
+AC_INIT(sdpa-multiprecision, 0.1)
 AM_INIT_AUTOMAKE([1.8 gnu subdir-objects foreign])
 AC_PROG_RANLIB
 AC_PROG_CC

@@ -1,3 +1,8 @@
+2023-04-03 Usama Muneeb
+        * SDPA-GMP 7.1.2 -> SDPA Multiprecision 0.1
+        * Allow usage as a library
+        * sdpa_block.{h,cpp} added from upstream SDPA package
+
 2015-03-20 Makoto Yamashita <Makoto.Yamashita@is.titech.ac.jp>
         * Modification for the latest gcc compilers.
 
