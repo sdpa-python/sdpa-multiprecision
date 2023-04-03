@@ -43,12 +43,14 @@ Clone this repository
 
 ```bash
 git clone https://github.com/sdpa-python/sdpa-multiprecision.git
-cd sdpa-gmp
+cd sdpa-multiprecision
 ```
 
 #### Building on Linux and macOS
 
-You will need to provide the location of GMP libraries and headers to the configure script
+On RedHat based Linux distributions, you might need to run `yum install glibc-static` before you run the configure script (the static libraries `libc.a`, `libm.a` and `libpthread.a` are not present by default).
+
+You will also need to provide the location of GMP libraries and headers to the configure script
 
 ```bash
 autoreconf -i
