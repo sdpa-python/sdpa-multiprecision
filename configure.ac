@@ -4,6 +4,7 @@ dnl
 
 AC_INIT(sdpa-multiprecision, 7.3.0)
 AM_INIT_AUTOMAKE([1.8 gnu subdir-objects foreign])
+AM_MAINTAINER_MODE
 AC_PROG_RANLIB
 AC_PROG_CC
 AC_PROG_CXX
