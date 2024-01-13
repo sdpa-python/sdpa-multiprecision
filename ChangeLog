@@ -1,3 +1,14 @@
+2024-01-12 Usama Muneeb
+        * SDPA Multiprecision 0.1 -> SDPA Multiprecision 7.3.0
+        * GMP 6.2.1 -> GMP 6.3.0
+        * Regarding version bump: v0.1 was a testing release due to the merging
+          of SDPA-GMP 7.1.3 and SDPA 7.3.16 code.
+          After addition of the ability to be used as libsdpa_gmp, it is at par
+          with the main SDPA package by functionality. Since semantic versioning
+          follows major.minor.patch syntax (and major.minor components are
+          concerned with API and functionality), we will bump the version number
+          to 7.3.0 to match major.minor of the current SDPA 7.3.17.
+
 2023-04-03 Usama Muneeb
         * SDPA-GMP 7.1.2 -> SDPA Multiprecision 0.1
         * Allow usage as a library

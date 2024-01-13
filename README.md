@@ -17,16 +17,15 @@ On Windows, owing to the `autotools` based buildsystem of SDPA-GMP, a POSIX like
 Download, extract and `cd` into GMP source:
 
 ```bash
-wget https://gmplib.org/download/gmp/gmp-6.2.1.tar.bz2
-tar xf gmp-6.2.1.tar.bz2
-cd gmp-6.2.1
+wget https://gmplib.org/download/gmp/gmp-6.3.0.tar.bz2
+tar xf gmp-6.3.0.tar.bz2
+cd gmp-6.3.0
 ```
 
 Run the configure script. Assuming you had GMP extracted on the Desktop:
 
 ```bash
-autoreconf -i
-./configure --prefix=$HOME/Desktop/gmp-6.2.1 --enable-cxx
+./configure --prefix=$HOME/Desktop/gmp-6.3.0 --enable-cxx
 ```
 
 Build GMP. It's important to run `make check` as well as `make install`. Without `make install`, libraries and headers will not be generated.
@@ -53,8 +52,7 @@ On RedHat based Linux distributions, you might need to run `yum install glibc-st
 You will also need to provide the location of GMP libraries and headers to the configure script
 
 ```bash
-autoreconf -i
-./configure --with-gmp-includedir=$HOME/Desktop/gmp-6.2.1/include --with-gmp-libdir=$HOME/Desktop/gmp-6.2.1/lib
+./configure --with-gmp-includedir=$HOME/Desktop/gmp-6.3.0/include --with-gmp-libdir=$HOME/Desktop/gmp-6.3.0/lib
 make
 ```
 
@@ -69,7 +67,6 @@ SDPA Multiprecision also requires the SPOOLES library. SPOOLES is also contained
 Assuming you had MSYS2 installed in the default location:
 
 ```bash
-autoreconf -i
 ./configure --with-system-spooles --with-spooles-includedir=/c/msys64/mingw64/include/spooles
 make
 ```
