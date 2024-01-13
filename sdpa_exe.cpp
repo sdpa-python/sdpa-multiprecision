@@ -246,7 +246,89 @@ static void argumentAnalysis(SDPA& Problem1,
 int main(int argc, char** argv)
 {
   TimeStart(ALL_START1);
-  mpf_set_default_prec(200);
+  /*
+    January 2024 (Usama Muneeb)
+
+    We handle all command line arguments later in `argumentAnalysis` function,
+    however the `-pt` argument (or `precision` in the parameter file) must be read
+    in advance. This is because `mpf_set_default_prec` must be called before an
+    SDPA object is instantiated (so that the precision of `mpf_class` objects in
+    SDPA class can be set according to it).
+
+    If using as a library, `mpf_set_default_prec` can be called before creating
+    an SDPA instance.
+  */
+  if (argc == 1) {
+    message(argv[0]);
+  }
+  char* paramFileName  = USER_PARAMETER_FILE;
+  for (int index = 0; index < argc; ++index) {
+    char* target = argv[index];
+    if (strcmp(target,"-p")==0 && index+1 < argc) {
+      paramFileName = argv[index+1];
+      index++;
+      continue;
+    }
+    if (strcmp(target,"-pt")==0 && index+1 < argc) {
+      int tmp = atoi(argv[index+1]);
+      // rMessage("mpf_set_default_prec() called with precision of -pt="<<tmp);
+      switch (tmp) {
+        case 0: mpf_set_default_prec(200); break; // DEFAULT
+        case 1: mpf_set_default_prec(100); break; // UNSTABLE_BUT_FAST
+        case 2: mpf_set_default_prec(300); break; // STABLE_BUT_SLOW
+        default: mpf_set_default_prec(200); // DEFAULT
+        index++;
+      }
+      /*
+        If `-pt` flag is set, any parameter file will be ignored.
+
+        Note: `-pt` flag is like a preset for all parameters (and not just
+        the precision). Other parameters will be set later by
+        `Parameter::setDefaultParameter` routine (which will be called later).
+      */
+      paramFileName = NULL;
+      continue;
+    }
+  }
+  if (paramFileName != NULL) {
+    FILE* fptmp = NULL;
+    if ((fptmp=fopen(paramFileName,"r"))==NULL) {
+      // In case user specified file cannot be read try DEFAULT_PARAMETER_FILE
+      if ((fptmp=fopen(DEFAULT_PARAMETER_FILE,"r"))==NULL) {
+        /*
+          If DEFAULT_PARAMETER_FILE can also not be read, do not read any file
+          and use the default precision of 200
+        */
+        paramFileName = NULL;
+        // rMessage("mpf_set_default_prec(200)");
+        mpf_set_default_prec(200);
+      }
+      else {
+        paramFileName = DEFAULT_PARAMETER_FILE;
+      }
+    }
+  }
+  /*
+    If paramFileName is "still" not NULL it means `-pt` was not set by user
+    AND some parameter file can be read (user specified or default)
+  */
+  if (paramFileName != NULL) {
+    FILE* parameterFile = fopen(paramFileName,"r");
+    int    precision;
+    double ignore;
+    for (int i=0; i < 10; ++i) {
+      // ignore `maxIteration` through `epsilonDash`
+      fscanf(parameterFile,"%d%*[^\n]",&ignore);
+    }
+    fscanf(parameterFile,"%d%*[^\n]",&precision);
+    fclose(parameterFile);
+    // rMessage("mpf_set_default_prec(" << precision << ")");
+    mpf_set_default_prec(precision);
+  }
+  /*
+    Completed in-advance processing of `-pt` parameter (or parameter file) for
+    setting `mpf_set_default_prec`.
+  */
   SDPA Problem1;
   time_t ltime;
   time(&ltime);
@@ -261,7 +343,7 @@ int main(int argc, char** argv)
   char* inputFileName  = NULL;
   char* resultFileName = NULL;
   char* initFileName   = NULL;
-  char* paramFileName  = NULL;
+  paramFileName  = NULL;
 
   SDPA::SparseType isInputSparse = SDPA::DENSE;
   SDPA::SparseType isInitSparse  = SDPA::DENSE;

@@ -243,6 +243,16 @@ void Parameter::readFile(FILE* parameterFile)
   fscanf(parameterFile,"%lf%*[^\n]",&betaBar);
   fscanf(parameterFile,"%lf%*[^\n]",&gammaStar);
   fscanf(parameterFile,"%lf%*[^\n]",&epsilonDash);
+  /*
+  `precision` parameter will have been set in advance in `sdpa_exe.cpp`.
+  Reading it here will have no effect on the allocation of precision
+  for `mpf_class` objects (see long note in `sdpa_exe.cpp`).
+
+  However, this is being retained here for two reasons:
+  1. The sequence of parameter file is sensitive and;
+  2. This function is called by `SDPA::readParameter` which will write
+     the value of precision parameter to the output file.
+  */
   fscanf(parameterFile,"%d%*[^\n]",&precision);
   fscanf(parameterFile,"%s %*[^\n]",xPrint);
   fscanf(parameterFile,"%s %*[^\n]",XPrint);
