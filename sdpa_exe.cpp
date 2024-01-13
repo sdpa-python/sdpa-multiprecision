@@ -102,7 +102,7 @@ static void argumentAnalysis(SDPA& Problem1,
   }
   if (strcmp(argv[1],"--version") == 0) {
     fprintf(stdout,"====\n");
-    // fprintf(stdout,"SDPA (SemiDefinite Programming Algorithm) %s\n",sdpa_version);
+    fprintf(stdout,"SDPA Multiprecision (SemiDefinite Programming Algorithm) %s\n",sdpa_version);
     // fprintf(stdout,"     %s\n",sdpa_right);
     fprintf(stdout,"====\n");
     exit(0);
@@ -253,7 +253,7 @@ int main(int argc, char** argv)
   char string_time[1024];
   strcpy(string_time,ctime(&ltime));
   string_time[strlen(string_time)-1]='\0';
-  // fprintf(stdout,"SDPA (Version %s) start at [%s]\n", sdpa_version, string_time);
+  fprintf(stdout,"SDPA Multiprecision (Version %s) start at [%s]\n", sdpa_version, string_time);
   // cout << "let me see your ..." << endl;
   if (argc == 1) {
     message(argv[0]);

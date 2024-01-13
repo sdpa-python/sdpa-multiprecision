@@ -32,6 +32,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 static const char rsdpa_right[] =
   "'rsdpa' has been written by Makoto Yamashita since 2002.03.28";
+#ifdef VERSION
+// VERSION is set by configure script
+static const char sdpa_version[] = VERSION;
+#else
+// static const char sdpa_version[] = "7";
+#endif
 
 
 #endif // __sdpa_right_h__
