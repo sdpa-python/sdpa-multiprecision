@@ -114,8 +114,8 @@ LIBS="$LIBS $pthread_lib"
 CXXFLAGS="$CXXFLAGS $pthread_cflags"
 AC_SUBST(pthread_lib)
 
-CFLAGS="$CFLAGS -O2 -funroll-all-loops"
-CXXFLAGS="$CXXFLAGS -O2 -funroll-all-loops"
+CFLAGS="$CFLAGS -O2 -fPIC -funroll-all-loops"
+CXXFLAGS="$CXXFLAGS -O2 -fPIC -funroll-all-loops"
 AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)
 

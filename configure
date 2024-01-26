@@ -5507,8 +5507,8 @@ LIBS="$LIBS $pthread_lib"
 CXXFLAGS="$CXXFLAGS $pthread_cflags"
 
 
-CFLAGS="$CFLAGS -O2 -funroll-all-loops"
-CXXFLAGS="$CXXFLAGS -O2 -funroll-all-loops"
+CFLAGS="$CFLAGS -O2 -fPIC -funroll-all-loops"
+CXXFLAGS="$CXXFLAGS -O2 -fPIC -funroll-all-loops"
 
 
 
