@@ -179,6 +179,8 @@ public:
   mpf_class getDualObj();
   mpf_class getPrimalError();
   mpf_class getDualError();
+  double getPrimalError_double();
+  double getDualError_double();
   double getDigits();
   int    getIteration();
   mpf_class getMu();

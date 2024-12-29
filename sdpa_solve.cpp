@@ -227,6 +227,7 @@ void SDPA::solve()
 			 MAIN_LOOP_END1);
   com.TotalTime += com.MainLoop;
   currentRes.compute(m,inputData,currentPt);
+  currentRes.compute_double(m,inputData,currentPt);
 #if REVERSE_PRIMAL_DUAL
   Lal::let(currentPt.yVec,'=',currentPt.yVec,'*',&MMONE);
   phase.reverse();

@@ -140,8 +140,10 @@ public:
 
   //   retVec_i := A_i bullet xMat (for i)
   void multi_InnerProductToA(DenseLinearSpace& xMat,Vector& retVec);
+  void multi_InnerProductToA_double(DenseLinearSpace& xMat,Vector& retVec);
   //   retMat := \sum_{i} A_i xVec_i
   void multi_plusToA(Vector& xVec, DenseLinearSpace& retMat);
+  void multi_plusToA_double(Vector& xVec, DenseLinearSpace& retMat);
   void display(FILE* fpout=stdout);
   void display_index(FILE* fpout=stdout);
 };
@@ -153,6 +155,8 @@ public:
   DenseLinearSpace dualMat;
   mpf_class            normPrimalVec;
   mpf_class            normDualMat;
+  double               normPrimalVec_double;
+  double               normDualMat_double;
   mpf_class            centerNorm;
 
   Residuals();
@@ -174,12 +178,17 @@ public:
   
   mpf_class computeMaxNorm(Vector& primalVec);
   mpf_class computeMaxNorm(DenseLinearSpace& dualMat);
+  double computeMaxNorm_double(Vector& primalVec);
+  double computeMaxNorm_double(DenseLinearSpace& dualMat);
 
   void update(int m,
 	      InputData& inputData,
 	      Solutions& currentPt,
 	      ComputeTime& com);
   void compute(int m, 
+	       InputData& inputData, 
+	       Solutions& currentPt);
+  void compute_double(int m, 
 	       InputData& inputData, 
 	       Solutions& currentPt);
   void display(FILE* fpout = stdout);

@@ -56,6 +56,14 @@ public:
 			      SparseMatrix& aMat,
 			      DenseMatrix&  bMat);
 
+  // December 2024: Usama Muneeb
+  // For recomputation of feasibility error with double precision
+  // This additional routine is required by
+  // inputData.multi_InnerProductToA_double(currentPt.xMat,primalVec)
+  static bool getInnerProduct_asdouble(double& ret,
+			      SparseMatrix& aMat,
+			      DenseMatrix&  bMat);
+
   static bool getCholesky(DenseMatrix& retMat, DenseMatrix& aMat);
 
 // nakata 2004/12/01 
@@ -100,8 +108,20 @@ public:
 		       mpf_class* scalar = NULL);
   static bool multiply(DenseMatrix& retMat,
 		       DenseMatrix& aMat, mpf_class* scalar = NULL);
+  // December 2024: Usama Muneeb
+  // For recomputation of feasibility error with double precision
+  // This additional routine is required by
+  // Lal::multiply_asdouble(dualMat,dualMat,&DMONE)
+  static bool multiply_asdouble(DenseMatrix& retMat,
+		       DenseMatrix& aMat, double* scalar = NULL);
   static bool multiply(Vector& retVec,
 		       Vector& aVec, mpf_class* scalar = NULL);
+  // December 2024: Usama Muneeb
+  // For recomputation of feasibility error with double precision
+  // This additional routine is required by
+  // Lal::multiply_asdouble(primalVec,primalVec,&DMONE)
+  static bool multiply_asdouble(Vector& retVec,
+		       Vector& aVec, double* scalar = NULL);
   static bool multiply(BlockVector& retVec,
 		       BlockVector& aVec,
 		       mpf_class* scalar = NULL);
@@ -119,15 +139,37 @@ public:
   // ret = a + (*scalar)*b
   static bool plus(Vector& retVec, Vector& aVec,
 		   Vector& bVec, mpf_class* scalar = NULL);
+  // December 2024: Usama Muneeb
+  // For recomputation of feasibility error with double precision
+  // This additional routine is required by
+  // Lal::plus_asdouble(primalVec,primalVec,inputData.b)
+  static bool plus_asdouble(Vector& retVec, Vector& aVec,
+		   Vector& bVec, double* scalar = NULL);
   static bool plus(DenseMatrix& retMat,
 		   DenseMatrix& aMat, DenseMatrix& bMat,
 		   mpf_class* scalar = NULL);
+  // December 2024: Usama Muneeb
+  // For recomputation of feasibility error with double precision
+  // This additional routine is required by
+  // Lal::minus_asdouble(dualMat,dualMat,currentPt.zMat)
+  static bool plus_asdouble(DenseMatrix& retMat,
+		   DenseMatrix& aMat, DenseMatrix& bMat,
+		   double* scalar = NULL);
   static bool plus(DenseMatrix& retMat,
 		   SparseMatrix& aMat, DenseMatrix& bMat,
 		   mpf_class* scalar = NULL);
   static bool plus(DenseMatrix& retMat,
 		   DenseMatrix& aMat, SparseMatrix& bMat,
 		   mpf_class* scalar = NULL);
+  // December 2024: Usama Muneeb
+  // For recomputation of feasibility error with double precision
+  // This additional routine is required by
+  // inputData.multi_plusToA_double(currentPt.yVec, dualMat)
+  // and then again by
+  // Lal::plus_asdouble(dualMat,dualMat,inputData.C)
+  static bool plus_asdouble(DenseMatrix& retMat,
+		   DenseMatrix& aMat, SparseMatrix& bMat,
+		   double* scalar = NULL);
   
   static bool plus(BlockVector& retVec,
 		   BlockVector& aVec,
@@ -214,15 +256,40 @@ public:
 			      SparseLinearSpace& aMat,
 			      DenseLinearSpace&  bMat);
 
+  // December 2024: Usama Muneeb
+  // For recomputation of feasibility error with double precision
+  // This additional routine is required by
+  // inputData.multi_InnerProductToA_double(currentPt.xMat,primalVec)
+  static bool getInnerProduct_asdouble(double& ret,
+			      SparseLinearSpace& aMat,
+			      DenseLinearSpace&  bMat);
+
   // ret = a (*scalar)*b
   static bool multiply(DenseLinearSpace& retMat,
 		       DenseLinearSpace& aMat,
 		       mpf_class* scalar = NULL);
+  // December 2024: Usama Muneeb
+  // For recomputation of feasibility error with double precision
+  // This additional routine is required by
+  // Lal::multiply_asdouble(dualMat,dualMat,&DMONE)
+  // ret = a (*scalar)*b
+  static bool multiply_asdouble(DenseLinearSpace& retMat,
+		       DenseLinearSpace& aMat,
+		       double* scalar = NULL);
   // ret = a + (*scalar)*b
   static bool plus(DenseLinearSpace& retMat,
 		   DenseLinearSpace& aMat,
 		   DenseLinearSpace& bMat,
 		   mpf_class* scalar = NULL);
+  // December 2024: Usama Muneeb
+  // For recomputation of feasibility error with double precision
+  // This additional routine is required by
+  // Lal::plus_asdouble(dualMat,dualMat,currentPt.zMat,&DMONE);
+  // ret = a + (*scalar)*b
+  static bool plus_asdouble(DenseLinearSpace& retMat,
+		   DenseLinearSpace& aMat,
+		   DenseLinearSpace& bMat,
+		   double* scalar = NULL);
 // CAUTION!!! We don't initialize retMat to zero matrix for efficiently.
   static bool plus(DenseLinearSpace& retMat,
 		   SparseLinearSpace& aMat,
@@ -233,6 +300,16 @@ public:
 		   DenseLinearSpace& aMat,
 		   SparseLinearSpace& bMat,
 		   mpf_class* scalar = NULL);
+  // December 2024: Usama Muneeb
+  // For recomputation of feasibility error with double precision
+  // This additional routine is required by
+  // inputData.multi_plusToA_double(currentPt.yVec, dualMat)
+  // and then again by
+  // Lal::plus_asdouble(dualMat,dualMat,inputData.C)
+  static bool plus_asdouble(DenseLinearSpace& retMat,
+		   DenseLinearSpace& aMat,
+		   SparseLinearSpace& bMat,
+		   double* scalar = NULL);
 
   // ret = a '*' (*scalar)
   static bool let(DenseLinearSpace& retMat, const char eq,

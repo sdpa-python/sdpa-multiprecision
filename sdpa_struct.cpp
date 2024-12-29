@@ -33,11 +33,14 @@ Vector::Vector()
 {
   nDim = 0;
   ele  = NULL;
+
+  ele_double = NULL; // never used except when recomputing residuals with double precision
 }
 
 Vector::Vector(int nDim, mpf_class value)
 {
   ele  = NULL;
+  ele_double = NULL; // never used except when recomputing residuals with double precision
   initialize(nDim,value);
 }
 
@@ -91,6 +94,11 @@ void Vector::terminate()
     delete[] ele;
   }
   ele = NULL;
+
+  if (ele_double) {
+    delete[] ele_double;
+  }
+  ele_double = NULL;
 }
 
 void Vector::setZero()
@@ -111,6 +119,24 @@ void Vector::display(FILE* fpout, char* printFormat)
   }
   if (nDim>0) {
     gmp_fprintf(fpout,printFormat,ele[nDim-1].get_mpf_t());
+    fprintf(fpout,"}\n");
+  } else {
+    fprintf(fpout,"  }\n");
+  }
+}
+
+void Vector::display_asdouble(FILE* fpout, char* printFormat)
+{
+  if (fpout == NULL) {
+    return;
+  }
+  fprintf(fpout,"{");
+  for (int j=0; j<nDim-1; ++j) {
+    fprintf(fpout,printFormat, ele_double[j]);
+    fprintf(fpout,",");
+  }
+  if (nDim>0) {
+    fprintf(fpout,printFormat, ele_double[nDim-1]);
     fprintf(fpout,"}\n");
   } else {
     fprintf(fpout,"  }\n");
@@ -158,6 +184,28 @@ bool Vector::copyFrom(Vector& other)
     }
   }
   Rcopy(nDim,other.ele,1,ele,1);
+  return _SUCCESS;
+}
+
+bool Vector::populateDoublePrecisionCopy()
+{
+  ele_double = new double[nDim]; // no need to check preexisting (this function is only called once)
+  if (ele_double==NULL) {
+    rError("Vector:: memory exhausted");
+  }
+  /*
+    We need to perform
+
+    Rcopy(nDim,other.ele,1,ele_double,1);
+
+    Since Rcopy would not copy mpf_class to double, we manually
+    implement functionality using the following for loop.
+  */
+
+  for (mpackint i = 0; i < nDim; i++) {
+    ele_double[i] = mpf_get_d(ele[i].get_mpf_t());
+  }
+
   return _SUCCESS;
 }
 
@@ -312,6 +360,9 @@ SparseMatrix::SparseMatrix()
   sp_ele        = NULL;
   NonZeroCount  = 0;
   NonZeroEffect = 0;
+
+  de_ele_double = NULL; // never used except when recomputing residuals with double precision
+  sp_ele_double = NULL; // never used except when recomputing residuals with double precision
 }
 
 SparseMatrix::SparseMatrix(int nRow, int nCol,
@@ -393,6 +444,15 @@ void SparseMatrix::terminate()
   if (sp_ele) {
     delete[] sp_ele;
     sp_ele = NULL;
+  }
+
+  if (de_ele_double) {
+    delete[] de_ele_double;
+    de_ele_double = NULL;
+  }
+  if (sp_ele_double) {
+    delete[] sp_ele_double;
+    sp_ele_double = NULL;
   }
 }
 
@@ -501,6 +561,38 @@ bool SparseMatrix::copyFrom(SparseMatrix& other)
       break;
     } // end of switch
   } // end of else
+  return _SUCCESS;
+}
+
+bool SparseMatrix::populateDoublePrecisionCopy()
+{
+  switch(type) {
+    case SPARSE:
+      sp_ele_double = new double[NonZeroCount];
+
+      for (int index = 0; index<NonZeroCount;++index) {
+        sp_ele_double[index] = mpf_get_d(sp_ele[index].get_mpf_t());
+      }
+      break;
+    case DENSE:
+      int length = nRow*nCol;
+      /*
+        We need to perform
+
+        Rcopy(length,de_ele,1,de_ele_double,1);
+
+        Since Rcopy would not copy mpf_class to double, we manually
+        implement functionality using the following for loop.
+      */
+
+      de_ele_double = new double[length];
+
+      for (mpackint i = 0; i < length; i++) {
+        de_ele_double[i] = mpf_get_d(de_ele[i].get_mpf_t());
+      }
+      
+      break;
+  }
   return _SUCCESS;
 }
 
@@ -680,6 +772,8 @@ DenseMatrix::DenseMatrix()
   type = DENSE;
 
   de_ele = NULL;
+
+  de_ele_double = NULL; // never used except when recomputing residuals with double precision
 }
 
 DenseMatrix::DenseMatrix(int nRow, int nCol,
@@ -736,6 +830,11 @@ void DenseMatrix::terminate()
     delete[] de_ele;
     de_ele = NULL;
   }
+
+  if (de_ele_double) {
+    delete[] de_ele_double;
+  }
+  de_ele_double = NULL;
 }
 
 void DenseMatrix::display(FILE* fpout, char* printFormat)
@@ -859,6 +958,28 @@ bool DenseMatrix::copyFrom(DenseMatrix& other)
   return _SUCCESS;
 }
 
+bool DenseMatrix::populateDoublePrecisionCopy()
+{
+  de_ele_double = new double[nRow*nCol];
+  if (de_ele_double==NULL) {
+    rError("DenseMatrix:: memory exhausted");
+  }
+  int length = nRow*nCol;
+  /*
+    We need to perform
+
+    Rcopy(length,other.de_ele,1,de_ele_double,1);
+
+    Since Rcopy would not copy mpf_class to double, we manually
+    implement functionality using the following for loop.
+  */
+
+  for (mpackint i = 0; i < length; i++) {
+    de_ele_double[i] = mpf_get_d(de_ele[i].get_mpf_t());
+  }
+  return _SUCCESS;
+}
+
 
 void DenseMatrix::setZero()
 {
@@ -867,6 +988,20 @@ void DenseMatrix::setZero()
   case DENSE:
     length = nRow*nCol;
     sdpa_dset(length,MZERO,de_ele,IONE);
+    break;
+  case COMPLETION:
+    rError("DenseMatrix:: no support for COMPLETION");
+    break;
+  }
+}
+
+void DenseMatrix::setZero_double()
+{
+  int length;
+  switch(type) {
+  case DENSE:
+    length = nRow*nCol;
+    sdpa_dset(length,DZERO,de_ele_double,IONE);
     break;
   case COMPLETION:
     rError("DenseMatrix:: no support for COMPLETION");
@@ -904,6 +1039,8 @@ SparseLinearSpace::SparseLinearSpace()
   LP_sp_nBlock = 0;
   LP_sp_index = NULL;
   LP_sp_block = NULL;
+
+  LP_sp_block_double = NULL; // never used except when recomputing residuals with double precision
 }
 
 SparseLinearSpace::SparseLinearSpace(int SDP_nBlock, 
@@ -1171,6 +1308,11 @@ void SparseLinearSpace::terminate()
     delete[] LP_sp_index;
     LP_sp_index = NULL;
   }
+
+  if (LP_sp_block_double) {
+    delete[] LP_sp_block_double;
+    LP_sp_block_double = NULL;
+  }
 }
 
 void SparseLinearSpace::changeToDense(bool forceChange)
@@ -1352,6 +1494,46 @@ bool SparseLinearSpace::copyFrom(SparseLinearSpace& other)
   return total_judge;
 }
 
+bool SparseLinearSpace::populateDoublePrecisionCopy()
+{
+  // return _SUCCESS;
+  bool total_judge;
+
+  // for SDP
+  if (SDP_sp_nBlock > 0) {
+    for (int l=0; l<SDP_sp_nBlock; ++l) {
+      SDP_sp_block[l].populateDoublePrecisionCopy();
+    }
+  }
+
+  // for SOCP
+#if 0
+  if (SOCP_sp_nBlock > 0) {
+    for (int l=0; l<SOCP_sp_nBlock; ++l) {
+      total_judge = SOCP_sp_block[l].populateDoublePrecisionCopy();
+    }
+  }
+#endif
+
+  // for LP
+  if ((LP_sp_nBlock > 0)&&(LP_sp_block_double==NULL)) {
+    LP_sp_block_double = new double[LP_sp_nBlock];
+    if (LP_sp_block_double==NULL) {
+      rError("SparseLinearSpace:: memory exhausted");
+    }
+  }
+  total_judge = _SUCCESS;
+  LP_sp_block_double = new double[LP_sp_nBlock];
+  for (int l=0; l<LP_sp_nBlock; ++l) {
+    LP_sp_block_double[l] = mpf_get_d(LP_sp_block[l].get_mpf_t());
+  }
+  if (total_judge==FAILURE) {
+    rError("SparseLinearSpace:: copy miss");
+  }
+
+  return total_judge;
+}
+
 void SparseLinearSpace::setElement_SDP(int block, int i, int j, mpf_class ele)
 {
   int k;
@@ -1495,6 +1677,8 @@ DenseLinearSpace::DenseLinearSpace()
   SOCP_block = NULL;
   LP_nBlock = 0;
   LP_block = NULL;
+
+  LP_block_double = NULL; // never used except when recomputing residuals with double precision
 }
 
 DenseLinearSpace::DenseLinearSpace(int SDP_nBlock, int* SDP_blockStruct,
@@ -1612,6 +1796,10 @@ void DenseLinearSpace::terminate()
     LP_block = NULL;
   }
 
+  if (LP_block_double) {
+    delete[] LP_block_double;
+    LP_block_double = NULL;
+  }
 }
 
 void DenseLinearSpace::display(FILE* fpout, char* printFormat)
@@ -1730,6 +1918,55 @@ bool DenseLinearSpace::copyFrom(DenseLinearSpace& other)
   return total_judge;
 }
 
+bool DenseLinearSpace::populateDoublePrecisionCopy()
+{
+  bool total_judge = _SUCCESS;
+
+  // for SDP
+  if (SDP_nBlock<0) {
+    rError("DenseLinearSpace:: SDP_nBlock is negative");
+  }
+  if (SDP_nBlock > 0) {
+    for (int l=0; l<SDP_nBlock; ++l) {
+      total_judge = SDP_block[l].populateDoublePrecisionCopy();
+    }
+  }
+  if (total_judge==FAILURE) {
+    rError("DenseLinearSpace:: copy miss");
+  }
+
+  // for SOCP
+#if 0
+  if (SOCP_nBlock<0) {
+    rError("DenseLinearSpace:: SOCP_nBlock is negative");
+  }
+  if (SOCP_nBlock > 0) {
+    for (int l=0; l<SOCP_nBlock; ++l) {
+      total_judge = SOCP_block[l].populateDoublePrecisionCopy();
+    }
+  }
+  if (total_judge==FAILURE) {
+    rError("DenseLinearSpace:: copy miss");
+  }
+#endif
+
+  // for LP
+  if (LP_nBlock<0) {
+    rError("DenseLinearSpace:: LP_nBlock is negative");
+  }
+  if ((LP_nBlock > 0) && (LP_block_double == NULL)) {
+    LP_block_double = new double[LP_nBlock];
+    if (LP_block_double==NULL) {
+      rError("DenseLinearSpace:: memory exhausted");
+    }
+    for (int l=0; l<LP_nBlock; ++l) {
+      LP_block_double[l] = mpf_get_d(LP_block[l].get_mpf_t());
+    }
+  }
+
+  return total_judge;
+}
+
 void DenseLinearSpace::setElement_SDP(int block, int i, int j, mpf_class ele)
 {
 
@@ -1782,6 +2019,33 @@ void DenseLinearSpace::setZero()
   if (LP_nBlock>0 && LP_block) {
     for (int l=0; l<LP_nBlock; ++l) {
       LP_block[l] = 0.0;
+    }
+  }
+
+}
+
+void DenseLinearSpace::setZero_double()
+{
+  // for SDP
+  if (SDP_nBlock>0 && SDP_block) {
+    for (int l=0; l<SDP_nBlock; ++l) {
+      SDP_block[l].setZero_double();
+    }
+  }
+
+  // for SOCP
+#if 0  
+  if (SOCP_nBlock>0 && SOCP_block) {
+    for (int l=0; l<SOCP_nBlock; ++l) {
+      SOCP_block[l].setZero_double();
+    }
+  }
+#endif
+
+  // for LP
+  if (LP_nBlock>0 && LP_block_double) {
+    for (int l=0; l<LP_nBlock; ++l) {
+      LP_block_double[l] = 0.0;
     }
   }
 

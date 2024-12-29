@@ -89,6 +89,9 @@ extern int IMONE   ; // = -1;
 extern mpf_class MZERO; // =  0.0;
 extern mpf_class MONE ; // =  1.0;
 extern mpf_class MMONE; // = -1.0;
+extern double DZERO; // =  0.0;
+extern double DONE ; // =  1.0;
+extern double DMONE; // = -1.0;
 
 class Time
 {

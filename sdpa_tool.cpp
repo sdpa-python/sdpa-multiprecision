@@ -42,6 +42,9 @@ int IMONE = -1;
 mpf_class MZERO =  0.0;
 mpf_class MONE  =  1.0;
 mpf_class MMONE = -1.0;
+double DZERO =  0.0;
+double DONE  =  1.0;
+double DMONE = -1.0;
 
 double Time::rGetUseTime()
 {

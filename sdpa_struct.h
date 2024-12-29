@@ -47,6 +47,17 @@ public:
   void display(FILE* fpout = stdout, char* printFormat = ((char*)P_FORMAT));
   void display(FILE* fpout,mpf_class scalar, char* printFormat = ((char*)P_FORMAT));
   bool copyFrom(Vector& other);
+
+  /*
+    December 2024: Usama Muneeb
+    An alternate representation of the main storage element(s) in double precision
+    Never used, except when recalculating residuals with double precision
+    Can be NULL'ed in constructor and deleted in destructor
+    Intermediate routines (e.g. initialize) need not look at it
+  */
+  double* ele_double;
+  void display_asdouble(FILE* fpout = stdout, char* printFormat = ((char*)P_FORMAT));
+  bool populateDoublePrecisionCopy();
 };
 
 class BlockVector
@@ -108,6 +119,17 @@ public:
   void setIdentity(mpf_class scalar = 1.0);
 
   bool sortSparseIndex(int&i, int& j);
+
+  /*
+    December 2024: Usama Muneeb
+    An alternate representation of the main storage element(s) in double precision
+    Never used, except when recalculating residuals with double precision
+    Can be NULL'ed in constructor and deleted in destructor
+    Intermediate routines (e.g. initialize) need not look at it
+  */
+  double* de_ele_double;
+  double* sp_ele_double;
+  bool populateDoublePrecisionCopy();
 };
 
 class DenseMatrix
@@ -133,6 +155,17 @@ public:
 
   void setZero();
   void setIdentity(mpf_class scalar = 1.0);
+
+  /*
+    December 2024: Usama Muneeb
+    An alternate representation of the main storage element(s) in double precision
+    Never used, except when recalculating residuals with double precision
+    Can be NULL'ed in constructor and deleted in destructor
+    Intermediate routines (e.g. initialize) need not look at it
+  */
+  double* de_ele_double;
+  void setZero_double();
+  bool populateDoublePrecisionCopy();
 };
 
 class SparseLinearSpace
@@ -199,6 +232,16 @@ public:
   void setIdentity(mpf_class scalar = 1.0);
   // no check
   bool sortSparseIndex(int&l , int& i, int& j);
+
+  /*
+    December 2024: Usama Muneeb
+    An alternate representation of the main storage element(s) in double precision
+    Never used, except when recalculating residuals with double precision
+    Can be NULL'ed in constructor and deleted in destructor
+    Intermediate routines (e.g. initialize) need not look at it
+  */
+  double* LP_sp_block_double;
+  bool populateDoublePrecisionCopy();
 };
 
 class DenseLinearSpace
@@ -229,6 +272,17 @@ class DenseLinearSpace
   void setElement_LP(int block, mpf_class ele);
   void setZero();
   void setIdentity(mpf_class scalar = 1.0);
+
+  /*
+    December 2024: Usama Muneeb
+    An alternate representation of the main storage element(s) in double precision
+    Never used, except when recalculating residuals with double precision
+    Can be NULL'ed in constructor and deleted in destructor
+    Intermediate routines (e.g. initialize) need not look at it
+  */
+  double* LP_block_double;
+  void setZero_double();
+  bool populateDoublePrecisionCopy();
 };
 
 }

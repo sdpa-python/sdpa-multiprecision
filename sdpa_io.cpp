@@ -1420,6 +1420,10 @@ void IO::printLastInfo(int pIteration,
 	    currentRes.normDualMat.get_mpf_t());
     gmp_fprintf(Display, "d.feas.error = %10.16Fe\n",
 	    currentRes.normPrimalVec.get_mpf_t());
+    fprintf(Display, "p.feas.error = %10.16e (recomputed with double precision)\n",
+	    currentRes.normDualMat_double);
+    fprintf(Display, "d.feas.error = %10.16e (recomputed with double precision)\n",
+	    currentRes.normPrimalVec_double);
     gmp_fprintf(Display, "relative eps = %10.16Fe\n",
             Rlamch_gmp("E").get_mpf_t());
     #else

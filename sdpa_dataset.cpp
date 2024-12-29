@@ -581,12 +581,59 @@ void InputData::multi_InnerProductToA(DenseLinearSpace& xMat,
   }    
 }
 
+//   retVec_i := A_i bullet xMat (for i)
+void InputData::multi_InnerProductToA_double(DenseLinearSpace& xMat, 
+				      Vector& retVec)
+{
+  mpf_class ip;
+  double ip_double;
+
+  /*
+    This routine directly populates `retVec` as double
+    Hence avoiding need for `populateDoublePrecisionCopy`
+    for `retVec`.
+  */
+
+  retVec.setZero();
+  retVec.ele_double = new double[retVec.nDim];
+  for (int i=0; i<retVec.nDim; i++){
+    // process as double, store as double
+    A[i].populateDoublePrecisionCopy();
+
+    /*
+      Lal::let(ip,'=',A[i],'.',xMat);
+    */
+    Lal::getInnerProduct_asdouble(ip_double, A[i], xMat);
+    retVec.ele_double[i] = ip_double;
+  }    
+}
+
   //   retMat := \sum_{i} A_i xVec_i
 void InputData::multi_plusToA(Vector& xVec, DenseLinearSpace& retMat)
 {
   retMat.setZero();
   for (int i=0; i<xVec.nDim; i++){
     Lal::let(retMat,'=',retMat,'+',A[i],&xVec.ele[i]);
+  }    
+}
+
+  //   retMat := \sum_{i} A_i xVec_i
+void InputData::multi_plusToA_double(Vector& xVec, DenseLinearSpace& retMat)
+{
+  retMat.populateDoublePrecisionCopy();
+  retMat.setZero_double();
+  for (int i=0; i<xVec.nDim; i++){
+    
+    /*
+      The below performs scalar multiplication followed by accumulation
+
+      Directly calling the relevant routines to avoid having
+      to overload the relevant `let` routines.
+
+      Lal::let(retMat,'=',retMat,'+',A[i],&xVec.ele[i]);
+    */
+
+    Lal::plus_asdouble(retMat,retMat,A[i],&xVec.ele_double[i]);
   }    
 }
 
@@ -715,6 +762,18 @@ mpf_class Residuals::computeMaxNorm(Vector& primalVec)
   return ret;
 }
 
+double Residuals::computeMaxNorm_double(Vector& primalVec)
+{
+  double ret = 0.0;
+  for (int k=0; k<primalVec.nDim; ++k) {
+    double tmp = fabs(primalVec.ele_double[k]);
+    if (tmp > ret) {
+      ret = tmp;
+    }
+  }
+  return ret;
+}
+
 mpf_class Residuals::computeMaxNorm(DenseLinearSpace& dualMat)
 {
   int SDP_nBlock = dualMat.SDP_nBlock;
@@ -740,6 +799,39 @@ mpf_class Residuals::computeMaxNorm(DenseLinearSpace& dualMat)
 
   for (int l=0; l<LP_nBlock; ++l) {
     tmp = abs(dualMat.LP_block[l]);
+    if (tmp > ret) {
+      ret = tmp;
+    }
+  }
+
+  return ret;
+}
+
+double Residuals::computeMaxNorm_double(DenseLinearSpace& dualMat)
+{
+  int SDP_nBlock = dualMat.SDP_nBlock;
+  int SOCP_nBlock = dualMat.SOCP_nBlock;
+  int LP_nBlock = dualMat.LP_nBlock;
+  double ret = 0.0;
+  double tmp;
+
+  for (int l=0; l<SDP_nBlock; ++l) {
+    double* target = dualMat.SDP_block[l].de_ele_double;
+    int size = dualMat.SDP_block[l].nRow;
+    for (int j=0; j<size*size; ++j) {
+      tmp = abs(target[j]);
+      if (tmp > ret) {
+	ret = tmp;
+      }
+    }
+  }
+
+  for (int l=0; l<SOCP_nBlock; ++l) {
+    rError("dataset:: current version do not support SOCP");
+  }
+
+  for (int l=0; l<LP_nBlock; ++l) {
+    tmp = abs(dualMat.LP_block_double[l]);
     if (tmp > ret) {
       ret = tmp;
     }
@@ -781,6 +873,57 @@ void Residuals::compute(int m,
   
   normPrimalVec = computeMaxNorm(primalVec);
   normDualMat   = computeMaxNorm(dualMat);
+  centerNorm = 0.0;
+}
+
+void Residuals::compute_double(int m,
+			InputData& inputData,
+			Solutions& currentPt)
+{
+  // p[k] = b[k] - A[k].X;
+  currentPt.xMat.populateDoublePrecisionCopy();
+  inputData.multi_InnerProductToA_double(currentPt.xMat,primalVec);
+
+  /*
+    Directly calling the relevant routines to avoid having
+    to overload the relevant `let` routines.
+
+    Lal::let(primalVec,'=',primalVec,'*',&DMONE);
+    Lal::let(primalVec,'=',primalVec,'+',inputData.b);
+  */
+
+  inputData.b.populateDoublePrecisionCopy();
+  Lal::multiply_asdouble(primalVec,primalVec,&DMONE);
+  Lal::plus_asdouble(primalVec,primalVec,inputData.b);
+
+
+
+  // D = C - Z - \sum A[k]y[k]
+  currentPt.yVec.populateDoublePrecisionCopy();
+  inputData.multi_plusToA_double(currentPt.yVec, dualMat);
+
+  /*
+    Directly calling the relevant routines to avoid having
+    to overload the relevant `let` routines.
+
+    Lal::let(dualMat,'=',dualMat,'*',&MMONE);
+    Lal::let(dualMat,'=',dualMat,'+',inputData.C);
+    Lal::let(dualMat,'=',dualMat,'-',currentPt.zMat);
+  */
+
+  Lal::multiply_asdouble(dualMat,dualMat,&DMONE);
+  inputData.C.populateDoublePrecisionCopy();
+  Lal::plus_asdouble(dualMat,dualMat,inputData.C); // default: scalar = NULL
+  currentPt.zMat.populateDoublePrecisionCopy();
+  Lal::plus_asdouble(dualMat,dualMat,currentPt.zMat,&DMONE);
+
+  // rMessage("primal residual =");
+  // primalVec.display_asdouble(stdout, "%e");
+  // rMessage("dual residual =");
+  // dualMat.display_asdouble();
+
+  normPrimalVec_double = computeMaxNorm_double(primalVec);
+  normDualMat_double   = computeMaxNorm_double(dualMat);
   centerNorm = 0.0;
 }
 

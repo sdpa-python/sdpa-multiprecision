@@ -332,6 +332,147 @@ bool Lal::getInnerProduct(mpf_class& ret,
   return _SUCCESS;
 }
 
+// December 2024: Usama Muneeb
+// For recomputation of feasibility error with double precision
+// This additional routine is required by
+// inputData.multi_InnerProductToA_double(currentPt.xMat,primalVec)
+bool Lal::getInnerProduct_asdouble(double& ret,
+			  SparseMatrix& aMat, DenseMatrix& bMat)
+{
+  if (aMat.nRow!=bMat.nRow || aMat.nCol!=bMat.nCol) {
+    rError("getInnerProduct:: different memory size");
+  }
+  int length;
+  int amari,shou;
+  
+  switch(aMat.type) {
+  case SparseMatrix::SPARSE:
+    // Attension: in SPARSE case, only half elements
+    // are stored. And bMat must be DENSE case.
+    ret = 0.0;
+    // rMessage("aMat.NonZeroCount == " << aMat.NonZeroCount);
+    #if 0
+    for (int index=0; index<aMat.NonZeroCount; ++index) {
+      int        i = aMat.row_index   [index];
+      int        j = aMat.column_index[index];
+      double value = aMat.sp_ele_double[index];
+      // rMessage("i=" << i << "  j=" << j);
+      if (i==j) {
+	ret+= value*bMat.de_ele_double[i+bMat.nRow*j];
+      } else {
+	ret+= value*(bMat.de_ele_double[i+bMat.nRow*j]
+		     + bMat.de_ele_double[j+bMat.nRow*i]);
+
+      }
+    }
+    #else
+    amari = aMat.NonZeroCount % 4;
+    shou = aMat.NonZeroCount / 4;
+    for (int index=0; index<amari; ++index) {
+      int        i = aMat.row_index   [index];
+      int        j = aMat.column_index[index];
+      double value = aMat.sp_ele_double[index];
+      // rMessage("i=" << i << "  j=" << j);
+      if (i==j) {
+	ret+= value*bMat.de_ele_double[i+bMat.nRow*j];
+      } else {
+	ret+= value*(bMat.de_ele_double[i+bMat.nRow*j]
+		     + bMat.de_ele_double[j+bMat.nRow*i]);
+
+      }
+    }
+    for (int index=amari,counter = 0;
+	 counter < shou ; ++counter, index+=4) {
+      int        i1 = aMat.row_index   [index];
+      int        j1 = aMat.column_index[index];
+      double value1 = aMat.sp_ele_double[index];
+      double ret1 = 0.0;
+      // rMessage("i=" << i << "  j=" << j);
+      if (i1==j1) {
+	ret1= value1*bMat.de_ele_double[i1+bMat.nRow*j1];
+      } else {
+	ret1= value1*(bMat.de_ele_double[i1+bMat.nRow*j1]
+		     + bMat.de_ele_double[j1+bMat.nRow*i1]);
+
+      }
+      int        i2 = aMat.row_index   [index+1];
+      int        j2 = aMat.column_index[index+1];
+      double value2 = aMat.sp_ele_double[index+1];
+      double ret2 = 0.0;
+      // rMessage("i=" << i << "  j=" << j);
+      if (i2==j2) {
+	ret2= value2*bMat.de_ele_double[i2+bMat.nRow*j2];
+      } else {
+	ret2= value2*(bMat.de_ele_double[i2+bMat.nRow*j2]
+		     + bMat.de_ele_double[j2+bMat.nRow*i2]);
+
+      }
+      int        i3 = aMat.row_index   [index+2];
+      int        j3 = aMat.column_index[index+2];
+      double value3 = aMat.sp_ele_double[index+2];
+      double ret3 = 0.0;
+      // rMessage("i=" << i << "  j=" << j);
+      if (i3==j3) {
+	ret3= value3*bMat.de_ele_double[i3+bMat.nRow*j3];
+      } else {
+	ret3= value3*(bMat.de_ele_double[i3+bMat.nRow*j3]
+		     + bMat.de_ele_double[j3+bMat.nRow*i3]);
+
+      }
+      int        i4 = aMat.row_index   [index+3];
+      int        j4 = aMat.column_index[index+3];
+      double value4 = aMat.sp_ele_double[index+3];
+      double ret4 = 0.0;
+      // rMessage("i=" << i << "  j=" << j);
+      if (i4==j4) {
+	ret4= value4*bMat.de_ele_double[i4+bMat.nRow*j4];
+      } else {
+	ret4= value4*(bMat.de_ele_double[i4+bMat.nRow*j4]
+		     + bMat.de_ele_double[j4+bMat.nRow*i4]);
+
+      }
+      // ret += ret1;
+      // ret += ret2;
+      // ret += ret3;
+      // ret += ret4;
+      ret += (ret1+ret2+ret3+ret4);
+    }
+    #endif
+    break;
+  case SparseMatrix::DENSE:
+    length = aMat.nRow*aMat.nCol;
+    /*
+      We need to do the double precision equivalent of
+
+        ret = Rdot(length,aMat.de_ele,1,bMat.de_ele,1);
+
+      The function is defined in mpack/Rdot.cpp as
+
+        Rdot(mpackint n, mpf_class * dx, mpackint incx, mpf_class * dy, mpackint incy)
+
+      `incx` and `incy` being 1 greatly simplifies the code
+
+      While for double precision this can be done in a vectorized manner by
+      LAPACK, we need not worry about efficiency as this is done only once
+      and does not justify creating BLAS/LAPACK an additional dependency.
+      -funroll-all-loops is also used during compile.
+    */
+
+    ret = 0.0;
+
+    if (length > 0) {
+      for (mpackint i = 0; i < length; i++) {
+        ret = ret + 
+          aMat.de_ele_double[i] * 
+          bMat.de_ele_double[i];
+      }
+    }
+
+    break;
+  }
+  return _SUCCESS;
+}
+
 bool Lal::getCholesky(DenseMatrix& retMat,DenseMatrix& aMat)
 {
   if (retMat.nRow!=aMat.nRow || retMat.nCol!=aMat.nCol
@@ -1111,6 +1252,54 @@ bool Lal::multiply(DenseMatrix& retMat,
   return _SUCCESS;
 }
 
+// December 2024: Usama Muneeb
+// For recomputation of feasibility error with double precision
+// This additional routine is required by
+// Lal::multiply_asdouble(dualMat,dualMat,&DMONE)
+bool Lal::multiply_asdouble(DenseMatrix& retMat,
+		   DenseMatrix& aMat, double* scalar)
+{
+  if (retMat.nRow!=aMat.nRow || retMat.nCol!=retMat.nCol
+      || retMat.type!=aMat.type) {
+    rError("multiply :: different matrix size");
+  }
+  if (scalar==NULL) {
+    scalar = &DONE;
+  }
+  int length;
+  switch (retMat.type) {
+  case DenseMatrix::DENSE:
+    length = retMat.nRow*retMat.nCol;
+    /*
+      We need to perform
+
+      Rcopy(length,aMat.de_ele,1,retMat.de_ele,1);
+    */
+    if (length > 0) {
+      for (mpackint i = 0; i < length; i++) {
+        retMat.de_ele_double[i] = aMat.de_ele_double[i];
+      }
+    }
+
+    /*
+      We need to perform
+
+      Rscal(length,*scalar,retMat.de_ele,1);
+    */
+    if (length > 0) {
+      for (mpackint i = 0; i < length; ++i) {
+        retMat.de_ele_double[i] = (*scalar) * retMat.de_ele_double[i];
+      }
+    }
+
+    break;
+  case DenseMatrix::COMPLETION:
+    rError("no support for COMPLETION");
+    break;
+  }
+  return _SUCCESS;
+}
+
 bool Lal::multiply(Vector& retVec,
 		   Vector& aVec, mpf_class* scalar)
 {
@@ -1122,6 +1311,45 @@ bool Lal::multiply(Vector& retVec,
   }
   Rcopy(retVec.nDim,aVec.ele,1,retVec.ele,1);
   Rscal(retVec.nDim,*scalar,retVec.ele,1);
+  return _SUCCESS;
+}
+
+// December 2024: Usama Muneeb
+// For recomputation of feasibility error with double precision
+// This additional routine is required by
+// Lal::multiply_asdouble(primalVec,primalVec,&DMONE)
+bool Lal::multiply_asdouble(Vector& retVec,
+		   Vector& aVec, double* scalar)
+{
+  if (retVec.nDim!=aVec.nDim) {
+    rError("multiply :: different vector size");
+  }
+  if (scalar==NULL) {
+    scalar = &DONE;
+  }
+
+  /*
+      Rcopy(retVec.nDim,aVec.ele,1,retVec.ele,1);
+
+      `incx` and `incy` being zero greatly simplifies the code
+      and reduces mpack/Rcopy.cpp to just one for loop
+  */
+
+  for (int i = 0; i < retVec.nDim; i++) {
+    retVec.ele_double[i] = aVec.ele_double[i];
+  }
+
+  /*
+      Rscal(retVec.nDim,*scalar,retVec.ele,1);
+
+      `incx` being zero greatly simplifies the code
+      and reduces mpack/Rscal.cpp to just one for loop
+  */
+
+  for (int i = 0; i < retVec.nDim; i++) {
+	  retVec.ele_double[i] = (*scalar) * retVec.ele_double[i];
+  }
+
   return _SUCCESS;
 }
 
@@ -1237,6 +1465,44 @@ bool Lal::plus(Vector& retVec, Vector& aVec,
   return _SUCCESS;
 }
 
+// December 2024: Usama Muneeb
+// For recomputation of feasibility error with double precision
+// This additional routine is required by
+// Lal::plus_asdouble(primalVec,primalVec,inputData.b)
+bool Lal::plus_asdouble(Vector& retVec, Vector& aVec,
+	       Vector& bVec, double* scalar)
+{
+  if (retVec.nDim!=aVec.nDim || aVec.nDim!=bVec.nDim) {
+    rError("plus :: different matrix size");
+  }
+  if (scalar==NULL) {
+    scalar = &DONE;
+  }
+  if (retVec.ele!=aVec.ele) {
+    /*
+        Rcopy(retVec.nDim,aVec.ele,1,retVec.ele,1);
+
+        `incx` and `incy` being zero greatly simplifies the code
+        and reduces mpack/Rcopy.cpp to just one for loop
+    */
+
+    for (int i = 0; i < retVec.nDim; i++) {
+      retVec.ele_double[i] = aVec.ele_double[i];
+    }
+  }
+  /*
+      Raxpy(retVec.nDim,*scalar,bVec.ele,1,retVec.ele,1);
+
+      `incx` and `incy` being zero greatly simplifies the code
+      and reduces mpack/Raxpy.cpp to just one for loop
+  */
+  for (int i = 0; i < retVec.nDim; i++) {
+    retVec.ele_double[i] = retVec.ele_double[i] + (*scalar) * bVec.ele_double[i];
+  }
+
+  return _SUCCESS;
+}
+
 bool Lal::plus(DenseMatrix& retMat,
 	       DenseMatrix& aMat, DenseMatrix& bMat,
 	       mpf_class* scalar)
@@ -1257,6 +1523,70 @@ bool Lal::plus(DenseMatrix& retMat,
       Rcopy(length,aMat.de_ele,1,retMat.de_ele,1);
     }
     Raxpy(length,*scalar,bMat.de_ele,1,retMat.de_ele,1);
+    break;
+  case DenseMatrix::COMPLETION:
+    rError("no support for COMPLETION");
+    break;
+  }
+  return _SUCCESS;
+}
+
+// December 2024: Usama Muneeb
+// For recomputation of feasibility error with double precision
+// This additional routine is required by
+// Lal::plus_asdouble(dualMat,dualMat,inputData.C);
+// and also by
+// Lal::minus_asdouble(dualMat,dualMat,currentPt.zMat)
+bool Lal::plus_asdouble(DenseMatrix& retMat,
+	       DenseMatrix& aMat, DenseMatrix& bMat,
+	       double* scalar)
+{
+  if (retMat.nRow!=aMat.nRow || retMat.nCol!=aMat.nCol
+      || retMat.nRow!=bMat.nRow || retMat.nCol!=bMat.nCol
+      || retMat.type!=aMat.type || retMat.type!=bMat.type) {
+    rError("plus_asdouble :: different matrix size");
+  }
+  if (scalar==NULL) {
+      scalar = &DONE;
+  }
+  int length;
+  switch (retMat.type) {
+  case DenseMatrix::DENSE:
+    length = retMat.nRow*retMat.nCol;
+    if (retMat.de_ele_double != aMat.de_ele_double) {
+      /*
+        We need to perform
+
+        Rcopy(length,aMat.de_ele,1,retMat.de_ele,1);
+      */
+      if (length > 0) {
+        for (mpackint i = 0; i < length; i++) {
+          retMat.de_ele_double[i] = aMat.de_ele_double[i];
+        }
+      }
+    }
+    /*
+      We need to do the double precision equivalent of
+
+        Raxpy(length,*scalar,bMat.de_ele,1,retMat.de_ele,1);
+
+      The function is defined in mpack/Raxpy.cpp as
+
+        Raxpy(mpackint n, mpf_class da, mpf_class * dx, mpackint incx, mpf_class * dy, mpackint incy)
+
+      `incx` and `incy` being 1 greatly simplifies the code
+
+      While for double precision this can be done in a vectorized manner by
+      LAPACK, we need not worry about efficiency as this is done only once
+      and does not justify creating BLAS/LAPACK an additional dependency.
+      -funroll-all-loops is also used during compile.
+    */
+
+    if (length > 0 && *scalar != 0.0) {
+        for (mpackint i = 0; i < length; i++) {
+            retMat.de_ele_double[i] = retMat.de_ele_double[i] + (*scalar) * bMat.de_ele_double[i];
+        }
+    }
     break;
   case DenseMatrix::COMPLETION:
     rError("no support for COMPLETION");
@@ -1462,6 +1792,136 @@ bool Lal::plus(DenseMatrix& retMat,
     }
     length = retMat.nRow*retMat.nCol;
     Raxpy(length,*scalar,bMat.de_ele,1,retMat.de_ele,1);
+    break;
+  } // end of switch
+  return _SUCCESS;
+}
+
+// December 2024: Usama Muneeb
+// For recomputation of feasibility error with double precision
+// This additional routine is required by
+// inputData.multi_plusToA_double(currentPt.yVec, dualMat)
+// and then again by
+// Lal::plus_asdouble(dualMat,dualMat,inputData.C)
+bool Lal::plus_asdouble(DenseMatrix& retMat,
+	       DenseMatrix& aMat, SparseMatrix& bMat,
+	       double* scalar)
+{
+  if (retMat.nRow!=aMat.nRow || retMat.nCol!=aMat.nCol
+      || retMat.nRow!=bMat.nRow || retMat.nCol!=bMat.nCol) {
+    rError("plus :: different matrix size");
+  }
+  // ret = a
+  if (retMat.copyFrom(aMat) == FAILURE) {
+    return FAILURE;
+  }
+  if (scalar==NULL) {
+    scalar = &DONE;
+  }
+  int length,shou,amari;
+  // ret += (*scalar) * b
+  switch (bMat.type) {
+  case SparseMatrix::SPARSE:
+    if (retMat.type!=DenseMatrix::DENSE
+	|| aMat.type!=DenseMatrix::DENSE) {
+      rError("plus :: different matrix type");
+    }
+    #if 0
+    for (int index=0; index<bMat.NonZeroCount; ++index) {
+      int        i = bMat.row_index   [index];
+      int        j = bMat.column_index[index];
+      double value = bMat.sp_ele_double      [index] * (*scalar);
+      if (i!=j) {
+	retMat.de_ele_double[i+retMat.nCol*j] += value;
+	retMat.de_ele_double[j+retMat.nCol*i] += value;
+      } else {
+	retMat.de_ele_double[i+retMat.nCol*i] += value;
+      }
+    } // end of 'for index'
+    #else
+    shou = bMat.NonZeroCount / 4;
+    amari = bMat.NonZeroCount % 4;
+    for (int index=0; index<amari; ++index) {
+      int        i = bMat.row_index   [index];
+      int        j = bMat.column_index[index];
+      double value = bMat.sp_ele_double      [index] * (*scalar);
+      if (i!=j) {
+	retMat.de_ele_double[i+retMat.nCol*j] += value;
+	retMat.de_ele_double[j+retMat.nCol*i] += value;
+      } else {
+	retMat.de_ele_double[i+retMat.nCol*i] += value;
+      }
+    } // end of 'for index'
+    for (int index=amari,counter=0;
+	 counter<shou; ++counter,index+=4) {
+      int        i1 = bMat.row_index   [index];
+      int        j1 = bMat.column_index[index];
+      double value1 = bMat.sp_ele_double      [index] * (*scalar);
+      if (i1!=j1) {
+	retMat.de_ele_double[i1+retMat.nCol*j1] += value1;
+	retMat.de_ele_double[j1+retMat.nCol*i1] += value1;
+      } else {
+	retMat.de_ele_double[i1+retMat.nCol*i1] += value1;
+      }
+      int        i2 = bMat.row_index   [index+1];
+      int        j2 = bMat.column_index[index+1];
+      double value2 = bMat.sp_ele_double      [index+1] * (*scalar);
+      if (i2!=j2) {
+	retMat.de_ele_double[i2+retMat.nCol*j2] += value2;
+	retMat.de_ele_double[j2+retMat.nCol*i2] += value2;
+      } else {
+	retMat.de_ele_double[i2+retMat.nCol*i2] += value2;
+      }
+      int        i3 = bMat.row_index   [index+2];
+      int        j3 = bMat.column_index[index+2];
+      double value3 = bMat.sp_ele_double      [index+2] * (*scalar);
+      if (i3!=j3) {
+	retMat.de_ele_double[i3+retMat.nCol*j3] += value3;
+	retMat.de_ele_double[j3+retMat.nCol*i3] += value3;
+      } else {
+	retMat.de_ele_double[i3+retMat.nCol*i3] += value3;
+      }
+      int        i4 = bMat.row_index   [index+3];
+      int        j4 = bMat.column_index[index+3];
+      double value4 = bMat.sp_ele_double      [index+3] * (*scalar);
+      if (i4!=j4) {
+	retMat.de_ele_double[i4+retMat.nCol*j4] += value4;
+	retMat.de_ele_double[j4+retMat.nCol*i4] += value4;
+      } else {
+	retMat.de_ele_double[i4+retMat.nCol*i4] += value4;
+      }
+    } // end of 'for index'
+    #endif
+    break;
+  case SparseMatrix::DENSE:
+    if (retMat.type!=DenseMatrix::DENSE
+	|| aMat.type!=DenseMatrix::DENSE) {
+      rError("plus :: different matrix type");
+    }
+    length = retMat.nRow*retMat.nCol;
+    /*
+      We need to do the double precision equivalent of
+
+        Raxpy(length,*scalar,bMat.de_ele,1,retMat.de_ele,1);
+
+      The function is defined in mpack/Raxpy.cpp as
+
+        Raxpy(mpackint n, mpf_class da, mpf_class * dx, mpackint incx, mpf_class * dy, mpackint incy)
+
+      `incx` and `incy` being 1 greatly simplifies the code
+
+      While for double precision this can be done in a vectorized manner by
+      LAPACK, we need not worry about efficiency as this is done only once
+      and does not justify creating BLAS/LAPACK an additional dependency.
+      -funroll-all-loops is also used during compile.
+    */
+
+    if (length > 0 && *scalar != 0.0) {
+        for (mpackint i = 0; i < length; i++) {
+            retMat.de_ele_double[i] = retMat.de_ele_double[i] + (*scalar) * bMat.de_ele_double[i];
+        }
+    }
+
     break;
   } // end of switch
   return _SUCCESS;
@@ -1850,6 +2310,49 @@ bool Lal::getInnerProduct(mpf_class& ret,
   return total_judge;
 }
 
+// December 2024: Usama Muneeb
+// For recomputation of feasibility error with double precision
+// This additional routine is required by
+// inputData.multi_InnerProductToA_double(currentPt.xMat,primalVec)
+bool Lal::getInnerProduct_asdouble(double& ret,
+			  SparseLinearSpace& aMat,
+			  DenseLinearSpace& bMat)
+{
+  bool total_judge = _SUCCESS;
+  ret = 0.0;
+  double tmp_ret;
+
+  // for SDP
+  for (int l=0; l<aMat.SDP_sp_nBlock; ++l) {
+    int index = aMat.SDP_sp_index[l];
+    bool judge = Lal::getInnerProduct_asdouble(tmp_ret,aMat.SDP_sp_block[l],bMat.SDP_block[index]);
+    ret += tmp_ret;
+    if (judge == FAILURE) {
+      total_judge = FAILURE;
+    }
+  }
+
+  // for SOCP
+#if 0
+  for (int l=0; l<aMat.SOCP_sp_nBlock; ++l) {
+    int index = aMat.SOCP_sp_index[l];
+    bool judge = Lal::getInnerProduct_asdouble(tmp_ret,aMat.SOCP_sp_block[l],bMat.SOCP_block[index]);
+    ret += tmp_ret;
+    if (judge == FAILURE) {
+      total_judge = FAILURE;
+    }
+  }
+#endif
+
+  for (int l=0; l<aMat.LP_sp_nBlock; ++l) {
+    int index = aMat.LP_sp_index[l];
+    tmp_ret = aMat.LP_sp_block_double[l] * bMat.LP_block_double[index];
+    ret += tmp_ret;
+  }
+
+  return total_judge;
+}
+
 bool Lal::multiply(DenseLinearSpace& retMat,
 		   DenseLinearSpace& aMat,
 		   mpf_class* scalar)
@@ -1889,6 +2392,55 @@ bool Lal::multiply(DenseLinearSpace& retMat,
       retMat.LP_block[l] = aMat.LP_block[l];
     } else{
       retMat.LP_block[l] = aMat.LP_block[l] * (*scalar);
+    }
+  }
+
+  return total_judge;
+}
+
+// December 2024: Usama Muneeb
+// For recomputation of feasibility error with double precision
+// This additional routine is required by
+// Lal::multiply_asdouble(dualMat,dualMat,&DMONE)
+bool Lal::multiply_asdouble(DenseLinearSpace& retMat,
+		   DenseLinearSpace& aMat,
+		   double* scalar)
+{
+  bool total_judge = _SUCCESS;
+
+  // for SDP
+  if (retMat.SDP_nBlock!=aMat.SDP_nBlock) {
+    rError("multiply:: different memory size");
+  }
+  for (int l=0; l<aMat.SDP_nBlock; ++l) {
+    bool judge = Lal::multiply_asdouble(retMat.SDP_block[l],aMat.SDP_block[l],scalar);
+    if (judge == FAILURE) {
+      total_judge = FAILURE;
+    }
+  }
+
+  // for SOCP
+#if 0
+  if (retMat.SOCP_nBlock!=aMat.SOCP_nBlock) {
+    rError("multiply:: different memory size");
+  }
+  for (int l=0; l<aMat.SOCP_nBlock; ++l) {
+    bool judge = Lal::multiply_asdouble(retMat.SOCP_block[l],aMat.SOCP_block[l],scalar);
+    if (judge == FAILURE) {
+      total_judge = FAILURE;
+    }
+  }
+#endif
+
+  // fo LP
+  if (retMat.LP_nBlock!=aMat.LP_nBlock) {
+    rError("multiply:: different memory size");
+  }
+  for (int l=0; l<aMat.LP_nBlock; ++l) {
+    if (&scalar == NULL) {
+      retMat.LP_block_double[l] = aMat.LP_block_double[l];
+    } else{
+      retMat.LP_block_double[l] = aMat.LP_block_double[l] * (*scalar);
     }
   }
 
@@ -1941,6 +2493,62 @@ bool Lal::plus(DenseLinearSpace& retMat,
       retMat.LP_block[l] = aMat.LP_block[l] + bMat.LP_block[l];
     } else {
       retMat.LP_block[l] = aMat.LP_block[l] + bMat.LP_block[l] * (*scalar);
+    }
+  }
+
+  return total_judge;
+}
+
+// December 2024: Usama Muneeb
+// For recomputation of feasibility error with double precision
+// This additional routine is required by
+// Lal::plus_asdouble(dualMat,dualMat,currentPt.zMat,&DMONE);
+bool Lal::plus_asdouble(DenseLinearSpace& retMat,
+	       DenseLinearSpace& aMat,
+	       DenseLinearSpace& bMat,
+	       double* scalar)
+{
+  bool total_judge = _SUCCESS;
+
+  // for SDP
+  if (retMat.SDP_nBlock!=aMat.SDP_nBlock 
+      || retMat.SDP_nBlock!=bMat.SDP_nBlock) {
+    rError("plus_asdouble:: different nBlock size");
+  }
+  for (int l=0; l<retMat.SDP_nBlock; ++l) {
+    bool judge = Lal::plus_asdouble(retMat.SDP_block[l],aMat.SDP_block[l],
+			   bMat.SDP_block[l],scalar);
+    if (judge == FAILURE) {
+      total_judge = FAILURE;
+    }
+  }
+
+  // for SOCP
+#if 0
+  if (retMat.SOCP_nBlock!=aMat.SOCP_nBlock 
+      || retMat.SOCP_nBlock!=bMat.SOCP_nBlock) {
+    rError("plus_asdouble:: different nBlock size");
+  }
+  for (int l=0; l<retMat.SOCP_nBlock; ++l) {
+    bool judge = Lal::plus_asdouble(retMat.SOCP_block[l],aMat.SOCP_block[l],
+			   bMat.SOCP_block[l],scalar);
+    if (judge == FAILURE) {
+      total_judge = FAILURE;
+    }
+  }
+#endif
+
+
+  // for LP
+  if (retMat.LP_nBlock!=aMat.LP_nBlock 
+      || retMat.LP_nBlock!=bMat.LP_nBlock) {
+    rError("plus_asdouble:: different nBlock size");
+  }
+  for (int l=0; l<retMat.LP_nBlock; ++l) {
+    if (scalar == NULL) {
+      retMat.LP_block_double[l] = aMat.LP_block_double[l] + bMat.LP_block_double[l];
+    } else {
+      retMat.LP_block_double[l] = aMat.LP_block_double[l] + bMat.LP_block_double[l] * (*scalar);
     }
   }
 
@@ -2031,6 +2639,56 @@ bool Lal::plus(DenseLinearSpace& retMat,
     } else {
       retMat.LP_block[index] = 
 	aMat.LP_block[index] + bMat.LP_sp_block[l] * (*scalar);
+    }
+  }
+
+  return total_judge;
+}
+
+// December 2024: Usama Muneeb
+// For recomputation of feasibility error with double precision
+// This additional routine is required by
+// inputData.multi_plusToA_double(currentPt.yVec, dualMat)
+// Lal::plus_asdouble(dualMat,dualMat,inputData.C);
+// Lal::minus_asdouble(dualMat,dualMat,currentPt.zMat);
+bool Lal::plus_asdouble(DenseLinearSpace& retMat,
+	       DenseLinearSpace& aMat,
+	       SparseLinearSpace& bMat,
+	       double* scalar)
+{
+  bool total_judge = _SUCCESS;
+
+  // for SDP
+  for (int l=0; l<bMat.SDP_sp_nBlock; ++l) {
+    int index = bMat.SDP_sp_index[l];
+    bool judge = Lal::plus_asdouble(retMat.SDP_block[index],aMat.SDP_block[index],
+			   bMat.SDP_sp_block[l],scalar);
+    if (judge == FAILURE) {
+      total_judge = FAILURE;
+    }
+  }
+
+  // for SOCP
+#if 0
+  for (int l=0; l<bMat.SOCP_sp_nBlock; ++l) {
+    int index = bMat.SOCP_sp_index[l];
+    bool judge = Lal::plus_asdouble(retMat.SOCP_block[index],aMat.SOCP_block[index],
+			   bMat.SOCP_sp_block[l],scalar);
+    if (judge == FAILURE) {
+      total_judge = FAILURE;
+    }
+  }
+#endif
+
+  // for LP
+  for (int l=0; l<bMat.LP_sp_nBlock; ++l) {
+    int index = bMat.LP_sp_index[l];
+    if (scalar == NULL) {
+      retMat.LP_block_double[index] = 
+	aMat.LP_block_double[index] + bMat.LP_sp_block_double[l];
+    } else {
+      retMat.LP_block_double[index] = 
+	aMat.LP_block_double[index] + bMat.LP_sp_block_double[l] * (*scalar);
     }
   }
 

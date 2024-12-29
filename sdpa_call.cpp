@@ -768,6 +768,18 @@ mpf_class SDPA::getDualError()
   return currentRes.normPrimalVec;
 }
 
+double SDPA::getPrimalError_double()
+{
+  // Note reverse primal-dual
+  return currentRes.normDualMat_double;
+}
+
+double SDPA::getDualError_double()
+{
+  // Note reverse primal-dual
+  return currentRes.normPrimalVec_double;
+}
+
 double SDPA::getDigits()
 {
   double mean =  (fabs(mpf_get_d(solveInfo.objValPrimal.get_mpf_t()))
