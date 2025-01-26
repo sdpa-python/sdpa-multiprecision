@@ -1,3 +1,7 @@
+2025-01-25 Usama Muneeb
+        * SDPA Multiprecision 7.3.0 -> SDPA Multiprecision 7.3.1
+        * Added a secondary calculation of feasibility error with double precision
+
 2024-01-12 Usama Muneeb
         * SDPA Multiprecision 0.1 -> SDPA Multiprecision 7.3.0
         * GMP 6.2.1 -> GMP 6.3.0

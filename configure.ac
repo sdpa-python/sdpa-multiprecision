@@ -1,8 +1,8 @@
 nl
-dnl Configure for SDPA Multiprecision 7.3.0
+dnl Configure for SDPA Multiprecision 7.3.1
 dnl
 
-AC_INIT(sdpa-multiprecision, 7.3.0)
+AC_INIT(sdpa-multiprecision, 7.3.1)
 AM_INIT_AUTOMAKE([1.8 gnu subdir-objects foreign])
 AM_MAINTAINER_MODE
 AC_PROG_RANLIB
